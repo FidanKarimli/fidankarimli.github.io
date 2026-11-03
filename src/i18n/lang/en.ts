@@ -30,8 +30,8 @@ export default {
   home: {
     socialLinks: "Social Links",
     featured: "Featured",
-    recentPosts: "Recent Blogs",
-    allPosts: "All Blogs",
+    recentPosts: "Writing",
+    allPosts: "All writing",
   },
   footer: {
     copyright: "Copyright",
