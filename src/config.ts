@@ -10,6 +10,15 @@ import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "default-og.jpg";
 
+export const SITE = {
+  website: "https://fidankarimli.github.io/",
+  author: "Fidan Karimli",
+  desc: "What I've learned so far, and what I'm still figuring out.",
+  title: "Fidan Karimli",
+  ogImage: "og.png",
+  // leave the other settings as they are
+};
+
 const config: ResolvedAstroPaperConfig = {
   site: {
     ...userConfig.site,
