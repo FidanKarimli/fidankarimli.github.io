@@ -7,6 +7,7 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
+import PhotoCollage from "@/components/PhotoCollage.astro";
 import PostTile from "@/components/PostTile.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -33,51 +34,56 @@ const homePath = getRelativeLocaleUrl(locale, "");
     class="app-layout my-1"
   >
     <section id="hero" class="border-border border-b pt-8 pb-6">
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        Hey, I'm Fidan.
-      </h1>
-      <a
-        target="_blank"
-        href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
-        class="inline-block"
-        aria-label="RSS Feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="stroke-accent scale-125 stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+      <div class="md:flex md:items-start md:gap-8">
+        <div class="min-w-0 flex-1">
+          <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
+            Hey, I'm Fidan.
+          </h1>
+          <a
+            target="_blank"
+            href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
+            class="inline-block"
+            aria-label="RSS Feed"
+            title="RSS Feed"
+          >
+            <IconRss
+              width={20}
+              height={20}
+              class="stroke-accent scale-125 stroke-3 rtl:-rotate-90"
+            />
+            <span class="sr-only">RSS Feed</span>
+          </a>
 
-      <p>
-        I am a ML Engineer (somehow). I write about machine learning concepts
-        with math and interactive visualizations - the kind of explanations I
-        wish existed when I was learning.
-      </p>
-      <p class="mt-2">
-        Right now I am a Junior AI Engineer at the National AI Center of
-        Azerbaijan, working on language models and retrieval for Azerbaijani
-        legal text, and a research collaborator with Prof. Yusuf Yaslan's group
-        at Istanbul Technical University. I studied Process Automation
-        Engineering at Baku Higher Oil School. More on the{" "}
-        <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
-          href={getRelativeLocaleUrl(locale, "about")}
-        >
-          about page
-        </LinkButton>{" "}
-        and in my{" "}
-        <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
-          href="/cv.pdf"
-        >
-          CV
-        </LinkButton>
-        .
-      </p>
-      <ProfileLinks />
+          <p>
+            I am a ML Engineer (somehow). I write about machine learning
+            concepts with math and interactive visualizations - the kind of
+            explanations I wish existed when I was learning.
+          </p>
+          <p class="mt-2">
+            Right now I am a Junior AI Engineer at the National AI Center of
+            Azerbaijan, working on language models and retrieval for Azerbaijani
+            legal text, and a research collaborator with Prof. Yusuf Yaslan's
+            group at Istanbul Technical University. I studied Process Automation
+            Engineering at Baku Higher Oil School. More on the{" "}
+            <LinkButton
+              class="hover:text-accent underline decoration-dashed underline-offset-4"
+              href={getRelativeLocaleUrl(locale, "about")}
+            >
+              about page
+            </LinkButton>{" "}
+            and in my{" "}
+            <LinkButton
+              class="hover:text-accent underline decoration-dashed underline-offset-4"
+              href="/cv.pdf"
+            >
+              CV
+            </LinkButton>
+            .
+          </p>
+          <ProfileLinks />
+        </div>
+        <PhotoCollage class="mt-4 md:mt-16" />
+      </div>
       <!-- Draft written for you to edit. -->
       <h2 class="mt-8 text-xl font-semibold tracking-wide">
         Research interests
@@ -89,8 +95,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
           are available, e.g. JEPA-style pretraining for protein stability.
         </li>
         <li>
-          <strong>Language models and retrieval for low-resource languages</strong>:
-          adapting open-weight LLMs and search systems to Azerbaijani and to
+          <strong
+            >Language models and retrieval for low-resource languages</strong
+          >: adapting open-weight LLMs and search systems to Azerbaijani and to
           specialised domains such as law.
         </li>
         <li>

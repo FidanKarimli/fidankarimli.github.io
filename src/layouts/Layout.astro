@@ -95,11 +95,12 @@ const rssHref = getAssetPath("rss.xml");
     -->
     <script is:inline>
       (function () {
-        const stored = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        const theme = stored ?? (prefersDark ? "dark" : "light");
+        // Light on first visit; afterwards, whatever the reader picked.
+        let stored = null;
+        try {
+          stored = localStorage.getItem("theme");
+        } catch (e) {}
+        const theme = stored === "dark" ? "dark" : "light";
         const root = document.firstElementChild;
         root?.setAttribute("data-theme", theme);
         root?.classList.toggle("dark", theme === "dark");

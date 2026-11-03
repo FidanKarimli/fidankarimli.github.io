@@ -3,11 +3,12 @@ const LIGHT = "light";
 const DARK = "dark";
 
 function getPreferredTheme(): string {
-  const stored = localStorage.getItem(THEME_KEY);
-  if (stored) return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? DARK
-    : LIGHT;
+  // Light on first visit; the OS dark-mode setting is deliberately ignored.
+  try {
+    return localStorage.getItem(THEME_KEY) === DARK ? DARK : LIGHT;
+  } catch {
+    return LIGHT;
+  }
 }
 
 // Reuse the value already set by the inline FOUC-prevention script if available.
@@ -16,7 +17,11 @@ let themeValue: string =
   getPreferredTheme();
 
 function persist(): void {
-  localStorage.setItem(THEME_KEY, themeValue);
+  try {
+    localStorage.setItem(THEME_KEY, themeValue);
+  } catch {
+    // Storage blocked (e.g. private mode): the choice lasts for this page only.
+  }
   reflect();
 }
 
@@ -59,11 +64,3 @@ document.addEventListener("astro:before-swap", event => {
       ?.setAttribute("content", color);
   }
 });
-
-// Sync with OS-level dark/light preference changes.
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", ({ matches }) => {
-    themeValue = matches ? DARK : LIGHT;
-    persist();
-  });
