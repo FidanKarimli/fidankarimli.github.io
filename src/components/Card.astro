@@ -1,5 +1,8 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { slugifyStr } from "@/utils/slugify";
+import config from "@/config";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { toTransitionName } from "@/utils/toTransitionName";
 import Datetime from "./Datetime.astro";
@@ -8,12 +11,18 @@ type Props = {
   variant?: "h2" | "h3";
 } & CollectionEntry<"posts">;
 
-const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const { variant: Heading = "h2", id, data, filePath, body = "" } = Astro.props;
 
-const { title, description, ...props } = data;
+const { title, description, tags, ...props } = data;
+
+const words = body.replace(/```[\s\S]*?```/g, " ").split(/\s+/).filter(Boolean);
+const locale = Astro.currentLocale ?? config.site.lang;
+const minutes = Math.max(1, Math.round(words.length / 220));
 ---
 
-<li class="my-6">
+<li
+  class="border-muted hover:border-accent my-5 border-s-2 py-1 ps-4 transition-colors"
+>
   <a
     href={getPostUrl(id, filePath, Astro.currentLocale)}
     class:list={[
@@ -26,6 +35,23 @@ const { title, description, ...props } = data;
       {title}
     </Heading>
   </a>
-  <Datetime {...props} />
+  <div class="flex flex-wrap items-center gap-x-2">
+    <Datetime {...props} />
+    <span class="font-ui text-muted-foreground text-sm">· {minutes} min read</span>
+  </div>
   <p>{description}</p>
+  {
+    tags.length > 0 && (
+      <p class="font-ui text-muted-foreground mt-1 flex flex-wrap gap-x-3 text-sm">
+        {tags.map(tag => (
+          <a
+            href={getRelativeLocaleUrl(locale, `tags/${slugifyStr(tag)}`)}
+            class="hover:text-accent"
+          >
+            #{tag}
+          </a>
+        ))}
+      </p>
+    )
+  }
 </li>

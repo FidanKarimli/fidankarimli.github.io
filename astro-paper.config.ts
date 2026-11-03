@@ -28,7 +28,7 @@ export default defineAstroPaperConfig({
   },
   socials: [
     { name: "github",   url: "https://github.com/FidanKarimli" },
-    // TODO: add your LinkedIn: { name: "linkedin", url: "https://www.linkedin.com/in/..." },
+    { name: "linkedin", url: "https://www.linkedin.com/in/fidan--karimli/" },
     { name: "mail",     url: "mailto:fidankarimli152004@gmail.com" },
   ],
   shareLinks: [

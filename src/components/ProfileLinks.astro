@@ -4,12 +4,9 @@ import IconLinkedin from "@/assets/icons/socials/linkedin.svg";
 import IconMail from "@/assets/icons/socials/mail.svg";
 import { getAssetPath } from "@/utils/withBase";
 
-// TODO: paste your LinkedIn profile URL here; until then the pill shows as a placeholder.
-const LINKEDIN_URL = "";
-
 const links = [
   { label: "GitHub", href: "https://github.com/FidanKarimli", Icon: IconGitHub },
-  { label: "LinkedIn", href: LINKEDIN_URL, Icon: IconLinkedin },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/fidan--karimli/", Icon: IconLinkedin },
   { label: "Email", href: "mailto:fidankarimli152004@gmail.com", Icon: IconMail },
 ];
 
@@ -33,23 +30,13 @@ const icon = "size-4 fill-transparent stroke-current stroke-2";
   {
     links.map(({ label, href, Icon }) => (
       <li>
-        {href ? (
-          <a
-            href={href}
-            class:list={[pill, "border-border hover:border-accent hover:text-accent"]}
-          >
-            <Icon class={icon} aria-hidden="true" />
-            {label}
-          </a>
-        ) : (
-          <span
-            class:list={[pill, "text-muted-foreground border-dashed"]}
-            title="TODO: add link"
-          >
-            <Icon class={icon} aria-hidden="true" />
-            {label} · add link
-          </span>
-        )}
+        <a
+          href={href}
+          class:list={[pill, "border-border hover:border-accent hover:text-accent"]}
+        >
+          <Icon class={icon} aria-hidden="true" />
+          {label}
+        </a>
       </li>
     ))
   }

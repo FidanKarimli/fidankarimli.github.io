@@ -37,4 +37,4 @@ My work so far sits between applied ML and research: adapting language models an
 
 ## Contact
 
-[Email](mailto:fidankarimli152004@gmail.com) · [GitHub](https://github.com/FidanKarimli) · [CV](/cv.pdf) · TODO: LinkedIn
+[Email](mailto:fidankarimli152004@gmail.com) · [GitHub](https://github.com/FidanKarimli) · [CV](/cv.pdf) · [LinkedIn](https://www.linkedin.com/in/fidan--karimli/)
