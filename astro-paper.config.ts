@@ -4,10 +4,10 @@ export default defineAstroPaperConfig({
   site: {
     url: "https://fidankarimli.github.io/",
     title: "Fidan Karimli",
-    description: "Notes on machine learning, with math.",
+    description: "What I've learned so far, and what I'm still figuring out.",
     author: "Fidan Karimli",
     profile: "https://github.com/FidanKarimli",
-    ogImage: "default-og.jpg",
+    ogImage: "og.png",
     lang: "en",
     timezone: "Asia/Baku",
     dir: "ltr",

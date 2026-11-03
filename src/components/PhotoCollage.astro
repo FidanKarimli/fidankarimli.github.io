@@ -1,25 +1,29 @@
 ---
 import type { ImageMetadata } from "astro";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 
-// Drop up to 4 photos into src/assets/photos/ (jpg, png, webp).
+// Drop 2 photos into src/assets/photos/ (jpg, png, webp); they are taken in name order.
 // The file name becomes the alt text: "psiml-serbia-2026.jpg" -> "psiml serbia 2026".
 const files = import.meta.glob<{ default: ImageMetadata }>(
   "/src/assets/photos/*.{jpg,jpeg,png,webp,avif}",
   { eager: true }
 );
 
-const photos = Object.entries(files)
-  .sort(([a], [b]) => a.localeCompare(b))
-  .slice(0, 4)
-  .map(([path, mod]) => ({
-    src: mod.default,
-    alt: path.split("/").pop()!.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
-  }));
+const photos = await Promise.all(
+  Object.entries(files)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(0, 2)
+    .map(async ([path, mod]) => ({
+      src: mod.default,
+      // Larger version shown when the photo is clicked.
+      large: (await getImage({ src: mod.default, width: 1400 })).src,
+      alt: path.split("/").pop()!.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
+    }))
+);
 
 // Placeholder frames while developing, so the layout is visible before photos exist.
 const showPlaceholders = photos.length === 0 && import.meta.env.DEV;
-const count = showPlaceholders ? 4 : photos.length;
+const count = showPlaceholders ? 2 : photos.length;
 
 type Props = { class?: string };
 const { class: className } = Astro.props;
@@ -27,36 +31,80 @@ const { class: className } = Astro.props;
 
 {
   count > 0 && (
-    <div class:list={["collage", className]} aria-label="Photos">
-      {Array.from({ length: count }, (_, i) => (
-        <figure class={`photo photo-${i + 1}`}>
-          {photos[i] ? (
+    <div class:list={["collage", className]}>
+      {Array.from({ length: count }, (_, i) =>
+        photos[i] ? (
+          <button
+            type="button"
+            class={`photo photo-${i + 1}`}
+            style={`aspect-ratio: ${photos[i].src.width} / ${photos[i].src.height}`}
+            data-large={photos[i].large}
+            data-alt={photos[i].alt}
+            aria-label={`Open photo: ${photos[i].alt}`}
+          >
             <Image
               src={photos[i].src}
               alt={photos[i].alt}
-              width={320}
-              class="h-full w-full object-cover"
+              width={360}
+              class="h-full w-full object-contain"
             />
-          ) : (
+          </button>
+        ) : (
+          <div class={`photo photo-${i + 1}`}>
             <span class="placeholder font-ui">photo {i + 1}</span>
-          )}
-        </figure>
-      ))}
+          </div>
+        )
+      )}
     </div>
   )
 }
 
+{
+  photos.length > 0 && (
+    <dialog id="photo-viewer" class="viewer">
+      <form method="dialog">
+        <button class="close font-ui" aria-label="Close">
+          ×
+        </button>
+      </form>
+      <img alt="" />
+    </dialog>
+  )
+}
+
+<script>
+  function initPhotoViewer() {
+    const viewer = document.querySelector<HTMLDialogElement>("#photo-viewer");
+    const img = viewer?.querySelector("img");
+    if (!viewer || !img) return;
+
+    document.querySelectorAll<HTMLButtonElement>(".collage button.photo").forEach(btn => {
+      btn.addEventListener("click", () => {
+        img.src = btn.dataset.large ?? "";
+        img.alt = btn.dataset.alt ?? "";
+        viewer.showModal();
+      });
+    });
+
+    // Clicking anywhere (backdrop or photo) closes it; Esc works natively.
+    viewer.addEventListener("click", () => viewer.close());
+  }
+
+  document.addEventListener("astro:page-load", initPhotoViewer);
+</script>
+
 <style>
-  /* Small prints scattered on a desk: slightly tilted, overlapping. */
+  /* Two small prints on a desk: slightly tilted, overlapping. */
   .collage {
     position: relative;
-    width: 16.5rem;
-    height: 19.5rem;
+    width: 14rem;
+    height: 14.5rem;
     flex-shrink: 0;
   }
   .photo {
     position: absolute;
-    width: 8.5rem;
+    width: 9rem;
+    max-height: 12rem;
     aspect-ratio: 4 / 5;
     margin: 0;
     padding: 0.35rem 0.35rem 1.1rem;
@@ -65,9 +113,10 @@ const { class: className } = Astro.props;
     box-shadow:
       0 1px 3px rgb(0 0 0 / 0.12),
       0 6px 16px rgb(0 0 0 / 0.1);
-    transition:
-      transform 0.25s ease,
-      z-index 0s;
+    transition: transform 0.25s ease;
+  }
+  button.photo {
+    cursor: zoom-in;
   }
   .photo :global(img) {
     border-radius: 2px;
@@ -78,21 +127,12 @@ const { class: className } = Astro.props;
     transform: rotate(-6deg);
   }
   .photo-2 {
-    top: 1.2rem;
+    bottom: 0;
     right: 0;
     transform: rotate(5deg);
   }
-  .photo-3 {
-    bottom: 0;
-    left: 0;
-    transform: rotate(3deg);
-  }
-  .photo-4 {
-    bottom: 0.4rem;
-    right: 0;
-    transform: rotate(-4deg);
-  }
-  .photo:hover {
+  .photo:hover,
+  .photo:focus-visible {
     z-index: 10;
     transform: rotate(0deg) scale(1.06);
   }
@@ -108,22 +148,50 @@ const { class: className } = Astro.props;
     font-size: 0.8rem;
   }
 
-  /* Phones: a small overlapping row instead of the scattered pile. */
+  /* Enlarged photo */
+  .viewer {
+    max-width: min(92vw, 1100px);
+    max-height: 90vh;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    overflow: visible;
+    cursor: zoom-out;
+  }
+  .viewer::backdrop {
+    background: rgb(0 0 0 / 0.75);
+  }
+  .viewer img {
+    display: block;
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 6px;
+  }
+  .close {
+    position: absolute;
+    top: -2.25rem;
+    right: 0;
+    color: #fff;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  /* Phones: the two prints sit side by side under the intro. */
   @media (max-width: 767px) {
     .collage {
       display: flex;
+      gap: 0.5rem;
       width: auto;
       height: auto;
-      padding: 0.5rem 0 0.75rem 0.5rem;
+      padding: 0.5rem 0 0.75rem 0.25rem;
     }
     .photo {
       position: relative;
       inset: auto;
-      width: 5.5rem;
-      margin-inline-start: -0.6rem;
-    }
-    .photo:first-child {
-      margin-inline-start: 0;
+      width: 7rem;
     }
   }
 
