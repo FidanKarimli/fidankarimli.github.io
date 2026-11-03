@@ -3,7 +3,12 @@ import type { ImageMetadata } from "astro";
 import { Image, getImage } from "astro:assets";
 
 // Drop 2 photos into src/assets/photos/ (jpg, png, webp); they are taken in name order.
-// The file name becomes the alt text: "psiml-serbia-2026.jpg" -> "psiml serbia 2026".
+// Add a caption below, keyed by file name. Without one, the file name is used as alt text:
+// "psiml-serbia-2026.jpg" -> "psiml serbia 2026".
+const captions: Record<string, string> = {
+  "photo-collage.png":
+    "PSI:ML 2026, Serbia: some of my best days, learning at full capacity and enjoying every minute of it, together.",
+};
 const files = import.meta.glob<{ default: ImageMetadata }>(
   "/src/assets/photos/*.{jpg,jpeg,png,webp,avif}",
   { eager: true }
@@ -13,12 +18,17 @@ const photos = await Promise.all(
   Object.entries(files)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 2)
-    .map(async ([path, mod]) => ({
-      src: mod.default,
-      // Larger version shown when the photo is clicked.
-      large: (await getImage({ src: mod.default, width: 1400 })).src,
-      alt: path.split("/").pop()!.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
-    }))
+    .map(async ([path, mod]) => {
+      const name = path.split("/").pop()!;
+      const caption = captions[name];
+      return {
+        src: mod.default,
+        // Larger version shown when the photo is clicked.
+        large: (await getImage({ src: mod.default, width: 1400 })).src,
+        caption,
+        alt: caption ?? name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
+      };
+    })
 );
 
 // Placeholder frames while developing, so the layout is visible before photos exist.
@@ -36,18 +46,24 @@ const { class: className } = Astro.props;
         photos[i] ? (
           <button
             type="button"
-            class={`photo photo-${i + 1}`}
-            style={`aspect-ratio: ${photos[i].src.width} / ${photos[i].src.height}`}
+            class:list={["photo", `photo-${i + 1}`, { captioned: photos[i].caption }]}
             data-large={photos[i].large}
             data-alt={photos[i].alt}
+            data-caption={photos[i].caption ?? ""}
             aria-label={`Open photo: ${photos[i].alt}`}
           >
-            <Image
-              src={photos[i].src}
-              alt={photos[i].alt}
-              width={640}
-              class="h-full w-full object-contain"
-            />
+            <span
+              class="block"
+              style={`aspect-ratio: ${photos[i].src.width} / ${photos[i].src.height}`}
+            >
+              <Image
+                src={photos[i].src}
+                alt={photos[i].alt}
+                width={640}
+                class="h-full w-full object-contain"
+              />
+            </span>
+            {photos[i].caption && <span class="caption">{photos[i].caption}</span>}
           </button>
         ) : (
           <div class={`photo photo-${i + 1}`}>
@@ -68,6 +84,7 @@ const { class: className } = Astro.props;
         </button>
       </form>
       <img alt="" />
+      <p class="viewer-caption"></p>
     </dialog>
   )
 }
@@ -76,12 +93,14 @@ const { class: className } = Astro.props;
   function initPhotoViewer() {
     const viewer = document.querySelector<HTMLDialogElement>("#photo-viewer");
     const img = viewer?.querySelector("img");
-    if (!viewer || !img) return;
+    const caption = viewer?.querySelector(".viewer-caption");
+    if (!viewer || !img || !caption) return;
 
     document.querySelectorAll<HTMLButtonElement>(".collage button.photo").forEach(btn => {
       btn.addEventListener("click", () => {
         img.src = btn.dataset.large ?? "";
         img.alt = btn.dataset.alt ?? "";
+        caption.textContent = btn.dataset.caption ?? "";
         viewer.showModal();
       });
     });
@@ -142,6 +161,20 @@ const { class: className } = Astro.props;
     max-height: none;
     transform: rotate(3deg);
   }
+  .photo.captioned {
+    aspect-ratio: auto;
+    padding-bottom: 0.6rem;
+  }
+  /* Handwritten-style note on the white strip of the print. */
+  .caption {
+    display: block;
+    margin-top: 0.5rem;
+    color: #4a4a4a;
+    font-size: 0.8rem;
+    font-style: italic;
+    line-height: 1.35;
+    text-align: center;
+  }
 
   .photo:hover,
   .photo:focus-visible {
@@ -180,6 +213,15 @@ const { class: className } = Astro.props;
     max-width: 100%;
     max-height: 90vh;
     border-radius: 6px;
+  }
+  .viewer-caption {
+    margin-top: 0.75rem;
+    color: #f0f0f0;
+    font-style: italic;
+    text-align: center;
+  }
+  .viewer-caption:empty {
+    display: none;
   }
   .close {
     position: absolute;
