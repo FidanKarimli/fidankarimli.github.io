@@ -7,7 +7,7 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
-import Card from "@/components/Card.astro";
+import PostTile from "@/components/PostTile.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
@@ -107,9 +107,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
           <h2 class="text-2xl font-semibold tracking-wide">
             {t.home.recentPosts}
           </h2>
-          <ul>
+          <ul class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {recentPosts.slice(0, postsConfig.perIndex).map(data => (
-              <Card variant="h3" {...data} />
+              <PostTile {...data} />
             ))}
           </ul>
         </section>

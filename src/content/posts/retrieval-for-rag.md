@@ -2,6 +2,8 @@
 title: 'Retrieval for RAG: dense retrieval, then re-ranking'
 description: 'Why most retrieval-augmented systems search in two stages: a fast bi-encoder to find candidates and a slower cross-encoder to order them.'
 pubDatetime: 2026-10-25T00:00:00Z
+cover: '../../assets/covers/rag.svg'
+subtitle: 'Retrieve fast, then re-rank carefully'
 tags: ['rag', 'retrieval', 'nlp']
 ---
 

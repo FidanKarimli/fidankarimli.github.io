@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" font-family="Georgia, serif">
+  <!-- Many documents -->
+  <g fill="#c9d6e8" stroke="#7d93b4" stroke-width="1.5">
+    <rect x="22" y="30" width="16" height="20" rx="2"/><rect x="44" y="30" width="16" height="20" rx="2"/><rect x="66" y="30" width="16" height="20" rx="2"/>
+    <rect x="88" y="30" width="16" height="20" rx="2"/><rect x="110" y="30" width="16" height="20" rx="2"/><rect x="132" y="30" width="16" height="20" rx="2"/>
+    <rect x="154" y="30" width="16" height="20" rx="2"/><rect x="176" y="30" width="16" height="20" rx="2"/><rect x="198" y="30" width="16" height="20" rx="2"/>
+    <rect x="220" y="30" width="16" height="20" rx="2"/><rect x="242" y="30" width="16" height="20" rx="2"/><rect x="264" y="30" width="16" height="20" rx="2"/>
+    <rect x="286" y="30" width="16" height="20" rx="2"/>
+  </g>
+  <!-- Funnel: bi-encoder (wide) then cross-encoder (narrow) -->
+  <path d="M16 62 H304 L232 112 H88 Z" fill="#e3ecf7" stroke="#3f6fa8" stroke-width="2"/>
+  <text x="160" y="92" font-size="14" fill="#2c4f7c" text-anchor="middle">bi-encoder · top-k</text>
+  <g fill="#7aa5d8" stroke="#3f6fa8" stroke-width="1.5">
+    <rect x="104" y="122" width="14" height="18" rx="2"/><rect x="124" y="122" width="14" height="18" rx="2"/>
+    <rect x="144" y="122" width="14" height="18" rx="2"/><rect x="164" y="122" width="14" height="18" rx="2"/>
+    <rect x="184" y="122" width="14" height="18" rx="2"/><rect x="204" y="122" width="14" height="18" rx="2"/>
+  </g>
+  <path d="M96 150 H224 L190 186 H130 Z" fill="#fde7d4" stroke="#e8833a" stroke-width="2"/>
+  <text x="160" y="173" font-size="13" fill="#9a4c12" text-anchor="middle">cross-encoder</text>
+  <g fill="#e8833a" stroke="#b5601f" stroke-width="1.5">
+    <rect x="140" y="196" width="12" height="16" rx="2"/><rect x="156" y="196" width="12" height="16" rx="2"/><rect x="172" y="196" width="12" height="16" rx="2"/>
+  </g>
+  <text x="196" y="210" font-size="13" fill="#3a3a3a" font-style="italic">→ LLM</text>
+</svg>

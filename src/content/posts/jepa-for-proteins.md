@@ -3,6 +3,8 @@ title: 'JEPA for proteins: notes from PSI:ML'
 description: 'Predicting in representation space instead of pixel space, and why that is a good fit for learning protein structure before predicting mutation effects.'
 pubDatetime: 2026-11-01T00:00:00Z
 featured: true
+cover: '../../assets/covers/jepa.svg'
+subtitle: 'Self-supervised graphs for protein stability'
 tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
 ---
 

@@ -17,6 +17,9 @@ const posts = defineCollection({
       draft: z.boolean().optional(),
       tags: z.array(z.string()).default(["others"]),
       ogImage: image().or(z.string()).optional(),
+      // Card picture on the Blogs grid, and a short line under the title.
+      cover: image().optional(),
+      subtitle: z.string().optional(),
       description: z.string(),
       canonicalURL: z.string().optional(),
       hideEditPost: z.boolean().optional(),

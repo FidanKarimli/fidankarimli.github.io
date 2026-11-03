@@ -15,7 +15,7 @@ serif text style, KaTeX math and React for interactive figures.
 
 ## Where things are
 
-- Posts: `src/content/posts/` (Markdown/MDX; frontmatter: `title`, `description`, `pubDatetime`, `tags`, optional `featured`, `draft`)
+- Posts: `src/content/posts/` (Markdown/MDX; frontmatter: `title`, `description`, `pubDatetime`, `tags`, optional `draft`, `cover` (card picture, e.g. an SVG in `src/assets/covers/`), `subtitle`)
 - About page: `src/content/pages/about.md`
 - Home intro and research interests: `src/pages/index.astro`
 - CV / GitHub / LinkedIn / Email buttons: `src/components/ProfileLinks.astro`

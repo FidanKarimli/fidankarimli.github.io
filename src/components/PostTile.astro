@@ -1,0 +1,49 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
+import { getPostUrl } from "@/utils/getPostPaths";
+
+type Props = CollectionEntry<"posts">;
+
+const { id, data, filePath } = Astro.props;
+const { title, subtitle, cover } = data;
+
+// Placeholder for posts without a cover: the title's initials.
+const initials = title
+  .split(/\s+/)
+  .filter(w => /^[A-Za-z]/.test(w))
+  .slice(0, 2)
+  .map(w => w[0].toUpperCase())
+  .join("");
+---
+
+<li>
+  <a
+    href={getPostUrl(id, filePath, Astro.currentLocale)}
+    class="tile group border-foreground hover:border-accent flex h-full flex-col rounded-lg border-2 p-4 transition-transform motion-safe:hover:-translate-y-1"
+  >
+    <div class="tile-art flex aspect-[4/3] items-center justify-center rounded-md">
+      {
+        cover ? (
+          <Image src={cover} alt="" class="h-full w-full object-contain" />
+        ) : (
+          <span aria-hidden="true" class="text-5xl font-semibold opacity-30">
+            {initials}
+          </span>
+        )
+      }
+    </div>
+    <h3 class="group-hover:text-accent mt-4 text-center text-lg leading-snug font-semibold">
+      {title}
+    </h3>
+    {subtitle && <p class="mt-1 text-center text-sm italic opacity-75">{subtitle}</p>}
+  </a>
+</li>
+
+<style>
+  /* Pictures always sit on a light panel, like a figure on paper. */
+  .tile-art {
+    background: #fbfaf7;
+    color: #282728;
+  }
+</style>
