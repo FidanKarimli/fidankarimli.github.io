@@ -31,7 +31,7 @@ const { class: className } = Astro.props;
 
 {
   count > 0 && (
-    <div class:list={["collage", className]}>
+    <div class:list={["collage", { single: count === 1 }, className]}>
       {Array.from({ length: count }, (_, i) =>
         photos[i] ? (
           <button
@@ -45,7 +45,7 @@ const { class: className } = Astro.props;
             <Image
               src={photos[i].src}
               alt={photos[i].alt}
-              width={360}
+              width={640}
               class="h-full w-full object-contain"
             />
           </button>
@@ -131,6 +131,18 @@ const { class: className } = Astro.props;
     right: 0;
     transform: rotate(5deg);
   }
+  /* One photo: a single, larger print. */
+  .single {
+    width: 17rem;
+    height: auto;
+  }
+  .single .photo {
+    position: relative;
+    width: 100%;
+    max-height: none;
+    transform: rotate(3deg);
+  }
+
   .photo:hover,
   .photo:focus-visible {
     z-index: 10;
@@ -192,6 +204,12 @@ const { class: className } = Astro.props;
       position: relative;
       inset: auto;
       width: 7rem;
+    }
+    .single {
+      padding: 0.75rem 0.5rem 1rem;
+    }
+    .single .photo {
+      width: min(20rem, 100%);
     }
   }
 
