@@ -1,0 +1,56 @@
+---
+import IconGitHub from "@/assets/icons/socials/github.svg";
+import IconLinkedin from "@/assets/icons/socials/linkedin.svg";
+import IconMail from "@/assets/icons/socials/mail.svg";
+import { getAssetPath } from "@/utils/withBase";
+
+// TODO: paste your LinkedIn profile URL here; until then the pill shows as a placeholder.
+const LINKEDIN_URL = "";
+
+const links = [
+  { label: "GitHub", href: "https://github.com/FidanKarimli", Icon: IconGitHub },
+  { label: "LinkedIn", href: LINKEDIN_URL, Icon: IconLinkedin },
+  { label: "Email", href: "mailto:fidankarimli152004@gmail.com", Icon: IconMail },
+];
+
+const pill =
+  "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-transform motion-safe:hover:-translate-y-0.5";
+const icon = "size-4 fill-transparent stroke-current stroke-2";
+---
+
+<ul class="font-ui mt-5 flex flex-wrap items-center gap-2" aria-label="Profile links">
+  <li>
+    <a
+      href={getAssetPath("cv.pdf")}
+      class:list={[pill, "border-accent bg-accent text-accent-foreground hover:opacity-90"]}
+    >
+      <svg class={icon} viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      CV
+    </a>
+  </li>
+  {
+    links.map(({ label, href, Icon }) => (
+      <li>
+        {href ? (
+          <a
+            href={href}
+            class:list={[pill, "border-border hover:border-accent hover:text-accent"]}
+          >
+            <Icon class={icon} aria-hidden="true" />
+            {label}
+          </a>
+        ) : (
+          <span
+            class:list={[pill, "text-muted-foreground border-dashed"]}
+            title="TODO: add link"
+          >
+            <Icon class={icon} aria-hidden="true" />
+            {label} · add link
+          </span>
+        )}
+      </li>
+    ))
+  }
+</ul>

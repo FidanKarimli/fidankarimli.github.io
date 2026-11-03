@@ -1,32 +1,160 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { getCollection } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import IconRss from "@/assets/icons/IconRss.svg";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import ProfileLinks from "@/components/ProfileLinks.astro";
+import Card from "@/components/Card.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+
+const { posts: postsConfig } = config;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+
+const posts = await getCollection("posts");
+const sortedPosts = getSortedPosts(posts);
+const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
+const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const homePath = getRelativeLocaleUrl(locale, "");
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>Hey, I'm Fidan.</h1>
-			<p>
-				I am a ML Engineer (somehow).
-			</p>
-			<p>
-				I write about machine learning concepts with math and interactive visualizations -
-				the kind of explanations I wish existed when I was learning. 
-				Think <a href="https://colah.github.io/">colah's blog</a>, but in my own voice.
-			</p>
-			
-			<p>
-				<a href="/blog">Read the blog →</a>
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<Layout>
+  <Header />
+  <main
+    id="main-content"
+    data-layout="index"
+    data-home-path={homePath}
+    class="app-layout my-1"
+  >
+    <section id="hero" class="border-border border-b pt-8 pb-6">
+      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
+        Hey, I'm Fidan.
+      </h1>
+      <a
+        target="_blank"
+        href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
+        class="inline-block"
+        aria-label="RSS Feed"
+        title="RSS Feed"
+      >
+        <IconRss
+          width={20}
+          height={20}
+          class="stroke-accent scale-125 stroke-3 rtl:-rotate-90"
+        />
+        <span class="sr-only">RSS Feed</span>
+      </a>
+
+      <p>
+        I am a ML Engineer (somehow). I write about machine learning concepts
+        with math and interactive visualizations - the kind of explanations I
+        wish existed when I was learning.
+      </p>
+      <p class="mt-2">
+        Right now I am a Junior AI Engineer at the National AI Center of
+        Azerbaijan, working on language models and retrieval for Azerbaijani
+        legal text, and a research collaborator with Prof. Yusuf Yaslan's group
+        at Istanbul Technical University. I studied Process Automation
+        Engineering at Baku Higher Oil School. More on the{" "}
+        <LinkButton
+          class="hover:text-accent underline decoration-dashed underline-offset-4"
+          href={getRelativeLocaleUrl(locale, "about")}
+        >
+          about page
+        </LinkButton>{" "}
+        and in my{" "}
+        <LinkButton
+          class="hover:text-accent underline decoration-dashed underline-offset-4"
+          href="/cv.pdf"
+        >
+          CV
+        </LinkButton>
+        .
+      </p>
+      <ProfileLinks />
+      <!-- Draft written for you to edit. -->
+      <h2 class="mt-8 text-xl font-semibold tracking-wide">
+        Research interests
+      </h2>
+      <ul class="mt-2 list-disc space-y-1 ps-5">
+        <li>
+          <strong>Self-supervised learning for scientific data</strong>:
+          learning useful representations of graphs and molecules before labels
+          are available, e.g. JEPA-style pretraining for protein stability.
+        </li>
+        <li>
+          <strong>Language models and retrieval for low-resource languages</strong>:
+          adapting open-weight LLMs and search systems to Azerbaijani and to
+          specialised domains such as law.
+        </li>
+        <li>
+          <strong>Graph learning for recommendation</strong>: cross-market
+          recommender systems and fairness for users with little or no
+          interaction history.
+        </li>
+      </ul>
+    </section>
+
+    {
+      featuredPosts.length > 0 && (
+        <section
+          id="featured"
+          class:list={[
+            "pt-12 pb-6",
+            { "border-border border-b": recentPosts.length > 0 },
+          ]}
+        >
+          <h2 class="text-2xl font-semibold tracking-wide">
+            {t.home.featured}
+          </h2>
+          <ul>
+            {featuredPosts.map(data => (
+              <Card variant="h3" {...data} />
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      recentPosts.length > 0 && (
+        <section id="recent-posts" class="pt-12 pb-6">
+          <h2 class="text-2xl font-semibold tracking-wide">
+            {t.home.recentPosts}
+          </h2>
+          <ul>
+            {recentPosts.slice(0, postsConfig.perIndex).map(data => (
+              <Card variant="h3" {...data} />
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <div class="my-8 text-center">
+      <LinkButton href={getRelativeLocaleUrl(locale, "posts")}>
+        {t.home.allPosts}
+        <IconArrowRight class="inline-block rtl:-rotate-180" />
+      </LinkButton>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
+      ?.dataset;
+    const baseRoot = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+    if (indexLayout?.layout) {
+      sessionStorage.setItem("backUrl", indexLayout.homePath ?? baseRoot);
+    }
+  });
+</script>
