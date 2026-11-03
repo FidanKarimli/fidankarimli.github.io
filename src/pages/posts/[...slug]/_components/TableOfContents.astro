@@ -1,0 +1,115 @@
+---
+import type { MarkdownHeading } from "astro";
+
+type Props = {
+  headings: MarkdownHeading[];
+};
+
+// Only h2/h3 make it into the contents; h1 is the post title.
+const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length > 1 && (
+    <>
+      {/* Wide screens: sticky, faded list in the left margin. */}
+      <aside
+        data-pagefind-ignore
+        aria-label="Contents"
+        class="toc absolute top-0 right-full me-10 hidden h-full w-52 xl:block"
+      >
+        <nav class="sticky top-24">
+          <p class="font-ui mb-2 text-xs tracking-widest uppercase">Contents</p>
+          <ol class="space-y-1.5 text-sm leading-snug">
+            {items.map(h => (
+              <li class:list={{ "ps-3": h.depth === 3 }}>
+                <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </aside>
+
+      {/* Narrow screens: a fold-out box above the post. */}
+      <details data-pagefind-ignore class="toc-mobile mt-6 xl:hidden">
+        <summary class="font-ui cursor-pointer text-sm">Contents</summary>
+        <ol class="mt-2 space-y-1 text-sm">
+          {items.map(h => (
+            <li class:list={{ "ps-3": h.depth === 3 }}>
+              <a href={`#${h.slug}`}>{h.text}</a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    </>
+  )
+}
+
+<script>
+  // Highlight the section currently being read.
+  function initToc() {
+    const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
+    if (links.length === 0) return;
+
+    const bySlug = new Map([...links].map(a => [a.dataset.tocLink, a]));
+    const headings = [...bySlug.keys()]
+      .map(slug => (slug ? document.getElementById(slug) : null))
+      .filter((h): h is HTMLElement => h !== null);
+
+    const setActive = (slug: string) => {
+      links.forEach(a => a.classList.toggle("active", a.dataset.tocLink === slug));
+    };
+
+    const onScroll = () => {
+      // The last heading above the top quarter of the screen is the current one.
+      const line = window.innerHeight * 0.25;
+      let current = headings[0]?.id;
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top <= line) current = h.id;
+      }
+      if (current) setActive(current);
+    };
+
+    onScroll();
+    document.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("astro:before-swap", () =>
+      document.removeEventListener("scroll", onScroll)
+    , { once: true });
+  }
+
+  document.addEventListener("astro:page-load", initToc);
+</script>
+
+<style>
+  .toc {
+    opacity: 0.55;
+    transition: opacity 0.2s;
+  }
+  .toc:hover,
+  .toc:focus-within {
+    opacity: 1;
+  }
+  .toc a {
+    display: block;
+    border-inline-start: 2px solid transparent;
+    margin-inline-start: -0.75rem;
+    padding-inline-start: calc(0.75rem - 2px);
+  }
+  .toc a:hover {
+    color: var(--accent);
+  }
+  .toc a.active {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .toc-mobile {
+    border: 1px solid var(--muted);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.9rem;
+  }
+  .toc-mobile a:hover {
+    color: var(--accent);
+  }
+</style>

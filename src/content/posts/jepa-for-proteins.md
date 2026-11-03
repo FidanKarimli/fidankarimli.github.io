@@ -22,7 +22,7 @@ and a positive $\Delta\Delta G$ (in the usual sign convention) means the mutant 
 
 ## Why JEPA
 
-Most self-supervised methods either *reconstruct* the input (masked autoencoders) or *contrast* views of it (SimCLR-style). A **Joint-Embedding Predictive Architecture** does something in between: it hides part of the input and asks the model to predict the *representation* of the hidden part, not its raw values.
+Most self-supervised methods either *reconstruct* the input (masked autoencoders [[4]](#ref-4)) or *contrast* views of it (SimCLR-style [[5]](#ref-5)). A **Joint-Embedding Predictive Architecture** does something in between: <mark>it hides part of the input and asks the model to predict the representation of the hidden part, not its raw values</mark> [[1]](#ref-1).
 
 There are three networks:
 
@@ -36,13 +36,13 @@ $$
 \mathcal{L}(\theta, \phi) = \frac{1}{|M|} \sum_{i \in M} \left\| \, g_\phi\big(E_\theta(x_c),\, m_i\big) - \operatorname{sg}\big(\bar{E}(x)_{m_i}\big) \right\|_2^2 ,
 $$
 
-where $\operatorname{sg}$ is stop-gradient. The target encoder is not trained by backprop; its weights follow the context encoder as an exponential moving average,
+where $\operatorname{sg}$ is stop-gradient. The target encoder is not trained by backprop; its weights follow the context encoder as an exponential moving average [[3]](#ref-3),
 
 $$
 \bar{\theta} \leftarrow \tau \bar{\theta} + (1 - \tau)\, \theta, \qquad \tau \in [0.99, 1).
 $$
 
-Predicting embeddings instead of raw coordinates matters for proteins: the exact position of every side-chain atom is partly noise, while *which residues interact with which* is the part we care about.
+Predicting embeddings instead of raw coordinates matters for proteins: the exact position of every side-chain atom is partly noise, while <mark>which residues interact with which</mark> is the part we care about.
 
 ## From a protein to a graph
 
@@ -70,7 +70,7 @@ ema_update(target_encoder, context_encoder, tau=0.996)
 | Stage | Data | Objective |
 | --- | --- | --- |
 | Pretraining | 6,782 protein structures | JEPA loss above |
-| Fine-tuning | 271,231 single mutations (MegaScale) | regression on $\Delta\Delta G$ |
+| Fine-tuning | 271,231 single mutations (MegaScale [[2]](#ref-2)) | regression on $\Delta\Delta G$ |
 
 TODO: describe the actual encoder (which GNN, node and edge features), the masking strategy, and how the mutation is fed to the fine-tuning head.
 
@@ -88,3 +88,13 @@ TODO: add the main metric (for example Spearman correlation on a held-out split)
 TODO: two or three honest open questions, e.g. whether pretraining helps more for proteins far from the fine-tuning distribution.
 
 *Code: TODO link to the project repository.*
+
+## References
+
+<ol class="references">
+  <li id="ref-1">M. Assran et al. “Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture.” <em>CVPR</em>, 2023. <a href="https://arxiv.org/abs/2301.08243">arXiv:2301.08243</a></li>
+  <li id="ref-2">K. Tsuboyama et al. “Mega-scale experimental analysis of protein folding stability in biology and design.” <em>Nature</em> 620, 2023. <a href="https://doi.org/10.1038/s41586-023-06328-6">doi:10.1038/s41586-023-06328-6</a></li>
+  <li id="ref-3">J.-B. Grill et al. “Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning.” <em>NeurIPS</em>, 2020. <a href="https://arxiv.org/abs/2006.07733">arXiv:2006.07733</a></li>
+  <li id="ref-4">K. He et al. “Masked Autoencoders Are Scalable Vision Learners.” <em>CVPR</em>, 2022. <a href="https://arxiv.org/abs/2111.06377">arXiv:2111.06377</a></li>
+  <li id="ref-5">T. Chen et al. “A Simple Framework for Contrastive Learning of Visual Representations.” <em>ICML</em>, 2020. <a href="https://arxiv.org/abs/2002.05709">arXiv:2002.05709</a></li>
+</ol>

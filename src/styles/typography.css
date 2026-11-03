@@ -18,6 +18,28 @@
       font-family: var(--font-ui);
     }
 
+    /* Highlighter-pen marks: <mark>key idea</mark> */
+    mark {
+      color: inherit;
+      padding: 0 0.15em;
+      border-radius: 0.2em;
+      background: linear-gradient(
+        transparent 45%,
+        color-mix(in srgb, var(--accent) 22%, transparent) 45%
+      );
+    }
+
+    /* Numbered references: <ol class="references"> with <li id="ref-1"> */
+    .references {
+      font-size: 0.95rem;
+      line-height: 1.55;
+
+      li:target {
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        border-radius: 0.25rem;
+      }
+    }
+
     h1,
     h2,
     h3,
