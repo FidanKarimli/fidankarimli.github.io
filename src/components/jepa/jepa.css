@@ -6,6 +6,7 @@
   --arm-b: #7357a8;
   --arm-c: #0b7a71;
   --arm-d: #96610f;
+  --aa-h: #4f7a14; --aa-p: #4a6591; --aa-c: #b4175c;
   --fig-sel: var(--accent);
   --fig-card: color-mix(in srgb, var(--muted) 28%, var(--background));
   --fig-line: color-mix(in srgb, var(--foreground) 16%, transparent);
@@ -17,6 +18,7 @@
   --arm-b: #b9a2ee;
   --arm-c: #43c6b8;
   --arm-d: #f2b34b;
+  --aa-h: #a6cc5c; --aa-p: #92abdc; --aa-c: #f27fae;
   --fig-card: color-mix(in srgb, var(--muted) 40%, var(--background));
   --fig-line: color-mix(in srgb, var(--foreground) 22%, transparent);
   --fig-faint: color-mix(in srgb, var(--foreground) 12%, transparent);

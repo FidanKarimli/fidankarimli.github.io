@@ -15,6 +15,8 @@ const posts = defineCollection({
       title: z.string(),
       featured: z.boolean().optional(),
       draft: z.boolean().optional(),
+      // Type the title out letter by letter on the post page.
+      typingTitle: z.boolean().optional(),
       tags: z.array(z.string()).default(["others"]),
       ogImage: image().or(z.string()).optional(),
       // Card picture on the Blogs grid, and a short line under the title.

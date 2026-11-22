@@ -16,6 +16,7 @@ import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import TableOfContents from "./_components/TableOfContents.astro";
 import FeedbackBox from "./_components/FeedbackBox.astro";
+import TypingTitle from "@/components/TypingTitle";
 import config from "@/config";
 
 export async function getStaticPaths() {
@@ -73,6 +74,7 @@ const {
   timezone,
   tags,
   hideEditPost,
+  typingTitle,
 } = post.data;
 
 const { Content, headings } = await render(post);
@@ -119,7 +121,7 @@ const ogImage = ogImageUrl
       style={{ viewTransitionName: toTransitionName(post.id) }}
       class="text-accent inline-block text-2xl font-bold sm:text-3xl"
     >
-      {title}
+      {typingTitle ? <TypingTitle client:load text={title} /> : title}
     </h1>
 
     <div class="my-2 flex items-center gap-2">

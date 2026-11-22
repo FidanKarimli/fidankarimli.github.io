@@ -5,6 +5,7 @@ pubDatetime: 2026-11-01T00:00:00Z
 featured: true
 cover: '../../assets/covers/jepa.svg'
 subtitle: 'A better-looking representation, a worse one'
+typingTitle: true
 tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
 ---
 
@@ -14,6 +15,134 @@ import ResultBars from '@/components/jepa/ResultBars.tsx';
 import RankReversal from '@/components/jepa/RankReversal.tsx';
 import LossCollapse from '@/components/jepa/LossCollapse.tsx';
 import MoreData from '@/components/jepa/MoreData.tsx';
+import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
+import CountingNumber from '@/components/CountingNumber.tsx';
+import HoverCard from '@/components/HoverCard.tsx';
+import Highlight from '@/components/Highlight.tsx';
+import { StructureLevels, MutationSwap, MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
+
+## Where this started
+
+This summer I went to PSI:ML, a summer school on scientific machine learning at the Petnica Science Center in Serbia. I wrote about it in my previous post. If you're a student, read it and think about applying next year, because you could be there too, and it's worth it.
+
+The best thing I took from it was breadth. I saw so many sides of how AI is used in science that my urge to explore random corners of it grew. One of those corners was graph neural networks, and what they do in biology, drug discovery and genetics. Before the school I knew very little about graphs, and I can't say how much I loved the idea.
+
+I had excellent lectures on this topic, and afterwards I learned a lot more through [the course materials](https://github.com/zenwor/sciml26_gjepa).
+
+Before the experiment, we need two ideas: what a graph is, and what a protein is. I'm not a biologist either, and you don't need to be one to follow this. 🙂
+
+## What is a protein?
+
+Proteins are the molecular machines of life. They speed up reactions, carry molecules, pass signals and build the structure of cells. At the most basic level, a protein is just a **chain of amino acids**. <Highlight text="The order of that chain decides how it folds, and the shape decides what it does." client:visible />
+
+That is also what makes proteins so interesting for machine learning: they are biological objects and structured data at the same time. A protein can be seen as a sequence, as a set of 3D coordinates, or, as we'll see later, as a graph.
+
+### The building blocks
+
+Amino acids are the building blocks. Every one of them has the **same backbone**, built around a central carbon (the alpha carbon), plus a **side chain**, also called the R-group.
+
+<div class="photo-small photo-light">
+
+![Structure of an amino acid: amino group, side group R and carboxylic acid group around a central carbon](../../assets/images/amino-acid-structure.png)
+
+</div>
+
+<div class="photo-small no-frame">
+  <img src="/images/6-aminopenicillanic-acid.gif" alt="Rotating ball-and-stick 3D model of 6-aminopenicillanic acid" width="778" height="599" loading="lazy" decoding="async" />
+</div>
+
+<div class="credit">
+
+6-Aminopenicillanic acid. Image: Kiantsu, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:6-Aminopenicillanic_acid_%286-APA%29.gif). Background made transparent.
+
+</div>
+
+The side chain is what makes the 20 amino acids different. Some avoid water, some are polar, some carry a charge. That variety matters, because each amino acid affects how the chain folds and how the finished protein behaves.
+
+Amino acids join through **peptide bonds** into a **polypeptide**, and a folded polypeptide is a protein. Once an amino acid is part of a chain, it is called a <HoverCard label="residue" title="Residue" body="An amino acid after it has joined a chain. In our protein graphs, one residue is one node." client:visible />. I'll use that word a lot, because <Highlight text="later each residue becomes a node in a graph" client:visible />. The order of the residues is the **sequence**, usually written with one-letter codes like ACDEFG.
+
+<div class="photo-pair photo-light">
+
+![Structure of glycine](../../assets/images/glycine.png)
+
+![Structure of alanine](../../assets/images/alanine.png)
+
+</div>
+
+<div class="photo-small photo-light">
+
+![Peptide bond formation: two amino acids join into a dipeptide and release water](../../assets/images/peptide-bond-formation.png)
+
+</div>
+
+<div class="photo-small photo-light">
+
+![A polypeptide chain of amino acids, with Phe, Leu, Ser and Cys highlighted](../../assets/images/polypeptide-chain.png)
+
+</div>
+
+<div class="credit">
+
+Figures: Brian Lindshield, Kansas State University Human Nutrition Flexbook, CC BY, via [SUNY Nutrition on Lumen Learning](https://courses.lumenlearning.com/suny-nutrition/chapter/2-21-amino-acids/).
+
+</div>
+
+### From a chain to a shape
+
+The sequence is only the first level. Proteins are not random strings of letters, they are shaped objects, and their structure builds up in **four levels**:
+
+- **Primary:** the sequence of amino acids.
+- **Secondary:** local patterns such as helices and sheets.
+- **Tertiary:** the full 3D shape of one chain.
+- **Quaternary:** how several chains fit together.
+
+<div class="photo-small">
+
+![Classes of protein structure: primary, secondary, tertiary and quaternary](../../assets/images/protein-structure-classes.png)
+
+</div>
+
+<StructureLevels />
+
+<div class="credit">
+
+More pictures: [StudyMind, an illustrated introduction](https://studymind.co.uk/notes/proteins-and-amino-acids-an-introduction/).
+
+</div>
+
+### One letter can change everything
+
+A **mutation** is a change in the sequence, and the simplest kind is a **point mutation**: one amino acid swapped for another. Sometimes nothing happens. Sometimes everything does. In sickle cell disease, a single swap at position 6 of hemoglobin's 146-amino-acid chain is enough to change the shape of red blood cells.
+
+<MutationSwap client:visible />
+
+Depending on where it happens and what the new amino acid brings, a mutation can change how tightly the protein packs, how it binds other molecules, or how stable the fold is. <Highlight text="This project is about the last one." client:visible />
+
+### Staying folded
+
+A folded protein isn't frozen. It keeps moving between a **folded** and an **unfolded** state, and **stability** is how strongly the folded state is preferred. Many weak interactions hold the fold together: water-avoiding packing, hydrogen bonds and charges. Conditions matter too, like temperature, pH and salt.
+
+The energy gap between the two states is called **ΔG**. In this project, <Highlight text="a larger ΔG means a more stable protein" client:visible />.
+
+### Putting a number on it
+
+So how do we measure what a mutation does? We compare the mutant with the original protein, called the **wild type**, and look at how much the stability changed:
+
+$$
+\Delta\Delta G = \Delta G_{\text{mutant}} - \Delta G_{\text{wild type}}
+$$
+
+In the data I use, **ΔΔG > 0** means the mutation stabilises the protein, **ΔΔG < 0** means it destabilises it, and a value near zero means it has little effect. Papers differ on this sign, so always check it before comparing datasets.
+
+<Stability client:visible />
+
+The measurements come from the MegaScale experiment. Many protein variants are exposed to a protease, an enzyme that cuts unfolded proteins more easily than folded ones, so the more a variant survives, the more stable it is. Comparing each mutant with its wild type then gives ΔΔG, and that number is what our model will learn to predict.
+
+One last bit of notation. A mutation such as E15Q is written as three pieces: the original amino acid (E, glutamate), the position (15) and the new amino acid (Q, glutamine).
+
+<MutationNotation />
+
+To score a mutation like this, it is not enough to know the letters. The model also needs to know where position 15 sits in the folded protein and what surrounds it. So the task is: take a protein structure and one mutation, and <Highlight text="predict ΔΔG" client:visible />.
 
 During a summer research project at Petnica, my teammate Pau and I trained a graph neural network to learn representations of proteins.
 
@@ -104,6 +233,8 @@ I started with 11,566 experimentally determined protein domains from SCOPe.
 
 For the downstream task, I used MegaScale stability measurements and evaluated on proteins held out from training.
 
+<DatasetNumbers client:visible />
+
 Here is the result, averaged across three random seeds. Higher is better.
 
 <ResultBars client:visible />
@@ -116,7 +247,7 @@ The vector-prediction objective, meanwhile, did worse than not pretraining at al
 
 Not slightly worse.
 
-**It lost 0.099 Spearman correlation against the baseline.**
+**It lost <CountingNumber number={0.099} decimalPlaces={3} client:visible /> <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> against the baseline.**
 
 This is negative transfer: pretraining has given us a representation that makes the downstream task harder rather than easier.
 
@@ -138,9 +269,9 @@ A larger effective rank suggests the representation is more spread out.
 
 So I measured it.
 
-The JEPA model used about 74 effective dimensions out of 128.
+The JEPA model used about <CountingNumber number={74} client:visible /> effective dimensions out of 128.
 
-The letter-prediction model used about 62.
+The letter-prediction model used about <CountingNumber number={62} client:visible />.
 
 And yet the model with the higher effective rank was much worse at predicting protein stability.
 
@@ -192,7 +323,7 @@ That distinction is worth remembering. When the target itself is moving, a train
 
 Perhaps JEPA simply needed more proteins.
 
-To investigate that, I repeated the pretrained experiments using 26,057 predicted structures from AlphaFold, more than twice the size of the original corpus.
+To investigate that, I repeated the pretrained experiments using <CountingNumber number={26057} client:visible /> predicted structures from AlphaFold, more than twice the size of the original corpus.
 
 The vector model improved, from 0.506 to 0.543.
 
@@ -202,7 +333,7 @@ The letter model? Almost unchanged: 0.640 became 0.639.
 
 The combined model? Also effectively unchanged.
 
-Something even more interesting happened with the letter model. Its masked amino-acid prediction accuracy rose from 26.7% to 35.3%.
+Something even more interesting happened with the letter model. Its masked amino-acid prediction accuracy rose from <CountingNumber number={26.7} decimalPlaces={1} suffix="%" client:visible /> to <CountingNumber number={35.3} decimalPlaces={1} suffix="%" delay={400} client:visible />.
 
 It had become substantially better at the task I had trained it to solve.
 

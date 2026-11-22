@@ -82,6 +82,62 @@
       @apply border-border mx-auto border;
     }
 
+    /* Square photos and diagrams: keep them from filling the whole column. */
+    .photo-small img {
+      max-width: min(100%, 24rem);
+      height: auto;
+    }
+
+    /* Transparent cut-outs sit directly on the page colour, so no frame. */
+    .photo-small.no-frame img {
+      border: 0;
+    }
+
+    /* Black line art on transparent or white backgrounds: give it a white card so it reads in dark mode. */
+    .photo-light img {
+      background: #fff;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+    }
+
+    .photo-pair {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+
+      p {
+        margin: 0;
+      }
+
+      img {
+        margin: 0;
+        max-width: min(46vw, 13rem);
+        height: auto;
+      }
+    }
+
+    /* Image credits and "more reading" links: small and quiet, out of the way of the text. */
+    .credit {
+      margin: -0.25rem 0 1.5rem;
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      line-height: 1.4;
+      opacity: 0.55;
+
+      p {
+        margin: 0;
+        font-size: inherit;
+        line-height: inherit;
+      }
+
+      a {
+        text-decoration-style: dotted;
+      }
+    }
+
     img[role="button"] {
       @apply cursor-zoom-in;
 

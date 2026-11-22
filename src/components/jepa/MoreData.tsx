@@ -1,6 +1,5 @@
 import { DATA, Figure, f3, type Arm } from "./shared";
 
-const TRIO: Arm[] = ["B", "C", "D"];
 const S = DATA.corpora.scope, A = DATA.corpora.alphafold;
 const LO = 0.45, HI = 0.7;
 const y = (v: number) => 62 + ((HI - v) / (HI - LO)) * 190;
