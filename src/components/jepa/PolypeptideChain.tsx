@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Figure } from "./shared";
+import { Figure, ReplayButton } from "./shared";
 import { BEADS, CHAIN_PATH } from "./chainData";
 
 /**
@@ -38,8 +38,10 @@ export default function PolypeptideChain() {
   return (
     <Figure
       label="A polypeptide chain drawn as a string of colored beads, zooming in on four neighbouring amino acids: Phe, Leu, Ser and Cys"
-      caption="A polypeptide chain. Zoom in, and each bead is one amino acid."
+      caption="Zoom in on any four neighbours and you can see the amino acids one by one."
     >
+      <p className="jf-title">A polypeptide chain</p>
+      <p className="jf-sub">Many amino acids linked in a row. Each bead is one amino acid.</p>
       <div className={`pc${armed ? " armed" : ""}${play ? " play" : ""}`}>
         <svg viewBox="0 26 720 404" role="img" aria-label="A long winding chain of colored beads. A box marks four neighbouring beads, which are shown larger as Phe, Leu, Ser and Cys.">
           <path className="pc-line draw" d={CHAIN_PATH} pathLength={1} style={{ ["--d" as string]: "0.2s", ["--t" as string]: "3s" }} />
@@ -82,7 +84,7 @@ export default function PolypeptideChain() {
           </div>
         </div>
 
-        <button type="button" className="pc-replay" onClick={replay}>↻ Replay</button>
+        <ReplayButton onClick={replay} />
       </div>
 
       <noscript>
@@ -101,8 +103,11 @@ export default function PolypeptideChain() {
         .pc-ins { fill: none; stroke: var(--fig-line); stroke-width: 1.2; }
         .pc-bond { stroke: var(--fig-note); stroke-opacity: 0.6; stroke-width: 4; }
         .pc-h { font-family: var(--font-ui); font-size: 15px; font-weight: 700; fill: var(--foreground); }
-        .pc-d { font-family: var(--font-ui); font-size: 12px; fill: var(--fig-note); }
-        .pc-bl { font-family: var(--font-ui); font-size: 12px; font-weight: 700; fill: #14181f; }
+        .pc-d { font-family: var(--font-ui); font-size: 12px; }
+        .pc-bl { font-family: var(--font-ui); font-size: 12px; font-weight: 700; }
+        /* More specific than the site-wide figure text rule, so these colours win. */
+        .pc svg .pc-d { fill: var(--fig-note); }
+        .pc svg .pc-bl { fill: #14181f; }
         .pc svg .bead, .pc .mob-bead { transform-box: fill-box; transform-origin: center; }
 
         .mob { display: none; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--fig-line); }

@@ -80,6 +80,23 @@
 .jf-btn:hover { border-color: var(--foreground); }
 .jf-btn[aria-pressed="true"], .jf-btn[aria-expanded="true"] { border-color: var(--foreground); }
 
+/* Replay control for the animated figures */
+.jf-replay-row { display: flex; justify-content: flex-end; margin-top: 0.8rem; }
+.jf-replay {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.32rem 0.85rem 0.32rem 0.7rem;
+  font: inherit; font-size: 0.78rem; line-height: 1;
+  color: var(--foreground); background: var(--background);
+  border: 1px solid var(--fig-line); border-radius: 999px;
+}
+.jf-replay:hover { border-color: var(--foreground); }
+.jf-replay svg { transition: transform 0.45s ease; }
+.jf-replay:hover svg { transform: rotate(-200deg); }
+@media (prefers-reduced-motion: reduce) {
+  .jf-replay-row { display: none; }
+  .jf-replay svg { transition: none; }
+}
+
 .jf-chip {
   display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 0.35rem;
   background: var(--c); color: var(--background); font-weight: 700; font-size: 0.78rem; flex: none;

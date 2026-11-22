@@ -88,6 +88,12 @@
       height: auto;
     }
 
+    /* A bit wider, for diagrams with small text. Tap an image to enlarge it. */
+    .photo-medium img {
+      max-width: min(100%, 28rem);
+      height: auto;
+    }
+
     /* Transparent cut-outs sit directly on the page colour, so no frame. */
     .photo-small.no-frame img {
       border: 0;
@@ -98,6 +104,17 @@
       background: #fff;
       padding: 0.75rem;
       border-radius: 0.5rem;
+    }
+
+    /* A diagram with a transparent background: no frame, and in dark mode the black line art
+       flips to light while the colours stay recognisable. */
+    .photo-adapt img {
+      border: 0;
+      background: none;
+
+      [data-theme="dark"] & {
+        filter: invert(1) hue-rotate(180deg);
+      }
     }
 
     .photo-pair {
@@ -115,6 +132,29 @@
         margin: 0;
         max-width: min(46vw, 13rem);
         height: auto;
+      }
+    }
+
+    /* The credits list at the end of a post: small and quiet. */
+    .credits {
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--muted-foreground);
+
+      ul {
+        margin: 0.5rem 0 0;
+        padding-inline-start: 1.1rem;
+      }
+
+      li,
+      a {
+        color: inherit;
+        font-size: inherit;
+      }
+
+      li {
+        margin: 0.25rem 0;
       }
     }
 

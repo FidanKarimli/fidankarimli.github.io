@@ -19,7 +19,7 @@ import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
 import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
-import { MutationSwap, MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
+import { MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
 import StructureStory from '@/components/jepa/StructureStory.tsx';
 import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
 
@@ -29,7 +29,7 @@ This summer I went to PSI:ML, a summer school on scientific machine learning at 
 
 The best thing I took from it was breadth. I saw so many sides of how AI is used in science that my urge to explore random corners of it grew. One of those corners was graph neural networks, and what they do in biology, drug discovery and genetics. Before the school I knew very little about graphs, and I can't say how much I loved the idea.
 
-I had excellent lectures on this topic, and afterwards I learned a lot more through [the course materials](https://github.com/zenwor/sciml26_gjepa).
+I had excellent lectures on this topic, and afterwards I learned a lot more through self-study materials.
 
 Before the experiment, we need two ideas: what a graph is, and what a protein is. I'm not a biologist either, and you don't need to be one to follow this. 🙂
 
@@ -53,23 +53,9 @@ Amino acids are the building blocks. Every one of them has the same backbone, bu
   <img src="/images/6-aminopenicillanic-acid.gif" alt="Rotating ball-and-stick 3D model of 6-aminopenicillanic acid" width="778" height="599" loading="lazy" decoding="async" />
 </div>
 
-<div class="credit">
-
-6-Aminopenicillanic acid. Image: Kiantsu, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:6-Aminopenicillanic_acid_%286-APA%29.gif). Background made transparent.
-
-</div>
-
 The side chain is what makes the 20 amino acids different. Some avoid water, some like it, and some carry an electric charge. That matters, because each one pulls the chain a little differently, and together they decide how it folds.
 
 Amino acids link up one after another, like beads on a string (the links are called peptide bonds). When that chain folds into a shape, it is a protein. Once an amino acid sits in a chain, we call it a <HoverCard label="residue" title="Residue" body="What an amino acid is called once it is part of a chain. In our graphs, one residue is one node." client:visible />. I'll use that word a lot, because <Highlight text="later each residue becomes a node in a graph" client:visible />. The order of the residues is the <Highlight text="sequence" type="underline" client:visible />, a string of letters, one per amino acid, like ACDEFG.
-
-<div class="photo-pair photo-light">
-
-![Glycine, the simplest amino acid](../../assets/images/glycine.png)
-
-![Alanine, an amino acid with a small extra group](../../assets/images/alanine.png)
-
-</div>
 
 <div class="photo-small photo-light">
 
@@ -77,13 +63,9 @@ Amino acids link up one after another, like beads on a string (the links are cal
 
 </div>
 
+Keep adding amino acids and you get a long chain called a polypeptide. Here is one, drawn as beads on a string. Zoom in and you can see the individual amino acids.
+
 <PolypeptideChain client:visible />
-
-<div class="credit">
-
-Figures: Brian Lindshield, Kansas State University Human Nutrition Flexbook, CC BY, via [SUNY Nutrition on Lumen Learning](https://courses.lumenlearning.com/suny-nutrition/chapter/2-21-amino-acids/).
-
-</div>
 
 ### From a chain to a shape
 
@@ -94,25 +76,17 @@ The sequence is only the first level. Proteins are not random strings of letters
 - Tertiary: the full 3D shape of one chain.
 - Quaternary: how several chains fit together.
 
-<div class="photo-small">
-
-![Classes of protein structure: primary, secondary, tertiary and quaternary](../../assets/images/protein-structure-classes.png)
-
-</div>
-
-<StructureStory client:visible />
-
-<div class="credit">
-
-More pictures: [StudyMind, an illustrated introduction](https://studymind.co.uk/notes/proteins-and-amino-acids-an-introduction/).
-
-</div>
+<StructureStory layout="grid" client:visible />
 
 ### One letter can change everything
 
 A mutation is a change in the sequence, and the simplest kind is a <Highlight text="point mutation" type="underline" client:visible />: one amino acid swapped for another. Sometimes nothing happens. Sometimes everything does. In sickle cell disease, a single swap at position 6 of hemoglobin's 146-amino-acid chain is enough to change the shape of red blood cells.
 
-<MutationSwap client:visible />
+<div class="photo-medium photo-adapt">
+
+![Diagram: a change in the DNA letters of a gene leads to a protein that no longer works, so the normal characteristic is lost](../../assets/images/mutations-diagram.png)
+
+</div>
 
 Depending on where it happens and what the new amino acid brings, a mutation can change how tightly the protein packs, how it binds other molecules, or how stable the fold is. <Highlight text="This project is about the last one." client:visible />
 
@@ -381,3 +355,13 @@ But I like that the experiment gave me a sharper question than the one I started
 And perhaps that's a perfectly good result, too.
 
 Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/graph-jepa-protein-stability). The project began at the Petnica Summer Institute with Pau Martínez.
+
+## Credits
+
+<div class="credits">
+
+- Rotating molecule (6-aminopenicillanic acid): Kiantsu, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:6-Aminopenicillanic_acid_%286-APA%29.gif). Background made transparent.
+- Amino acid and peptide bond figures: Brian Lindshield, Kansas State University Human Nutrition Flexbook, CC BY, via [SUNY Nutrition on Lumen Learning](https://courses.lumenlearning.com/suny-nutrition/chapter/2-21-amino-acids/).
+- More pictures of protein structure: [StudyMind, an illustrated introduction](https://studymind.co.uk/notes/proteins-and-amino-acids-an-introduction/).
+
+</div>

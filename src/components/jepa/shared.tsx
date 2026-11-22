@@ -37,6 +37,21 @@ export function Figure(props: { children: ReactNode; caption?: ReactNode; label:
   );
 }
 
+/** The Replay control shared by the animated figures: a small pill on the right, below the picture. */
+export function ReplayButton({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="jf-replay-row">
+      <button type="button" className="jf-replay" onClick={onClick} aria-label="Replay the animation">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M13.5 8a5.5 5.5 0 1 1-1.7-4" />
+          <path d="M13.6 2.2v3.1h-3.1" />
+        </svg>
+        Replay
+      </button>
+    </div>
+  );
+}
+
 export function Segmented<T extends string>(props: {
   name: string;
   legend: string;
