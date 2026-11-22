@@ -22,7 +22,7 @@ export default function DatasetNumbers() {
       <style>{`
         .dn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; margin: 1.6rem auto; padding: 0.9rem 0.5rem; border-top: 1px solid var(--fig-line); border-bottom: 1px solid var(--fig-line); }
         .dn-item { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 0; }
-        .dn .dn-num { font-size: clamp(1.5rem, 6.2vw, 2.3rem); line-height: 1.15; }
+        .dn .dn-num { font-size: clamp(1.5rem, 6.2vw, 2.3rem); line-height: 1.15; font-weight: 700; color: var(--accent); }
         .dn-item b { font-size: 0.85rem; }
         .dn-item span:last-child { font-size: 0.72rem; color: var(--fig-note); line-height: 1.3; }
       `}</style>

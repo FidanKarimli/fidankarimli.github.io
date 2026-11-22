@@ -19,7 +19,9 @@ import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
 import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
-import { StructureLevels, MutationSwap, MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
+import { MutationSwap, MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
+import StructureStory from '@/components/jepa/StructureStory.tsx';
+import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
 
 ## Where this started
 
@@ -33,13 +35,13 @@ Before the experiment, we need two ideas: what a graph is, and what a protein is
 
 ## What is a protein?
 
-Proteins are the molecular machines of life. They speed up reactions, carry molecules, pass signals and build the structure of cells. At the most basic level, a protein is just a **chain of amino acids**. <Highlight text="The order of that chain decides how it folds, and the shape decides what it does." client:visible />
+Proteins are the molecular machines of life. They speed up reactions, carry molecules, pass signals and build the structure of cells. At the most basic level, a protein is just a chain of amino acids. <Highlight text="The order of that chain decides how it folds, and the shape decides what it does." client:visible />
 
 That is also what makes proteins so interesting for machine learning: they are biological objects and structured data at the same time. A protein can be seen as a sequence, as a set of 3D coordinates, or, as we'll see later, as a graph.
 
 ### The building blocks
 
-Amino acids are the building blocks. Every one of them has the **same backbone**, built around a central carbon (the alpha carbon), plus a **side chain**, also called the R-group.
+Amino acids are the building blocks. Every one of them has the same backbone, built around a central carbon (the alpha carbon), plus a side chain, also called the R-group.
 
 <div class="photo-small photo-light">
 
@@ -59,7 +61,7 @@ Amino acids are the building blocks. Every one of them has the **same backbone**
 
 The side chain is what makes the 20 amino acids different. Some avoid water, some like it, and some carry an electric charge. That matters, because each one pulls the chain a little differently, and together they decide how it folds.
 
-Amino acids link up one after another, like beads on a string (the links are called peptide bonds). When that chain folds into a shape, it is a protein. Once an amino acid sits in a chain, we call it a <HoverCard label="residue" title="Residue" body="What an amino acid is called once it is part of a chain. In our graphs, one residue is one node." client:visible />. I'll use that word a lot, because <Highlight text="later each residue becomes a node in a graph" client:visible />. The order of the residues is the **sequence**, a string of letters, one per amino acid, like ACDEFG.
+Amino acids link up one after another, like beads on a string (the links are called peptide bonds). When that chain folds into a shape, it is a protein. Once an amino acid sits in a chain, we call it a <HoverCard label="residue" title="Residue" body="What an amino acid is called once it is part of a chain. In our graphs, one residue is one node." client:visible />. I'll use that word a lot, because <Highlight text="later each residue becomes a node in a graph" client:visible />. The order of the residues is the <Highlight text="sequence" type="underline" client:visible />, a string of letters, one per amino acid, like ACDEFG.
 
 <div class="photo-pair photo-light">
 
@@ -75,11 +77,7 @@ Amino acids link up one after another, like beads on a string (the links are cal
 
 </div>
 
-<div class="photo-small photo-light">
-
-![A long chain of amino acids, drawn as colored beads](../../assets/images/polypeptide-chain.png)
-
-</div>
+<PolypeptideChain client:visible />
 
 <div class="credit">
 
@@ -89,12 +87,12 @@ Figures: Brian Lindshield, Kansas State University Human Nutrition Flexbook, CC 
 
 ### From a chain to a shape
 
-The sequence is only the first level. Proteins are not random strings of letters, they are shaped objects, and their structure builds up in **four levels**:
+The sequence is only the first level. Proteins are not random strings of letters, they are shaped objects, and their structure builds up in four levels:
 
-- **Primary:** the sequence of amino acids.
-- **Secondary:** local patterns such as helices and sheets.
-- **Tertiary:** the full 3D shape of one chain.
-- **Quaternary:** how several chains fit together.
+- Primary: the sequence of amino acids.
+- Secondary: local patterns such as helices and sheets.
+- Tertiary: the full 3D shape of one chain.
+- Quaternary: how several chains fit together.
 
 <div class="photo-small">
 
@@ -102,7 +100,7 @@ The sequence is only the first level. Proteins are not random strings of letters
 
 </div>
 
-<StructureLevels />
+<StructureStory client:visible />
 
 <div class="credit">
 
@@ -112,7 +110,7 @@ More pictures: [StudyMind, an illustrated introduction](https://studymind.co.uk/
 
 ### One letter can change everything
 
-A **mutation** is a change in the sequence, and the simplest kind is a **point mutation**: one amino acid swapped for another. Sometimes nothing happens. Sometimes everything does. In sickle cell disease, a single swap at position 6 of hemoglobin's 146-amino-acid chain is enough to change the shape of red blood cells.
+A mutation is a change in the sequence, and the simplest kind is a <Highlight text="point mutation" type="underline" client:visible />: one amino acid swapped for another. Sometimes nothing happens. Sometimes everything does. In sickle cell disease, a single swap at position 6 of hemoglobin's 146-amino-acid chain is enough to change the shape of red blood cells.
 
 <MutationSwap client:visible />
 
@@ -120,19 +118,19 @@ Depending on where it happens and what the new amino acid brings, a mutation can
 
 ### Staying folded
 
-A folded protein isn't frozen. It keeps moving between a **folded** and an **unfolded** state, and **stability** is how strongly the folded state is preferred. Many weak interactions hold the fold together: water-avoiding packing, hydrogen bonds and charges. Conditions matter too, like temperature, pH and salt.
+A folded protein isn't frozen. It keeps moving between a folded and an unfolded state, and stability is how strongly the folded state is preferred. Many weak interactions hold the fold together: water-avoiding packing, hydrogen bonds and charges. Conditions matter too, like temperature, pH and salt.
 
-The energy gap between the two states is called **ΔG**. In this project, <Highlight text="a larger ΔG means a more stable protein" client:visible />.
+The energy gap between the two states is called ΔG. In this project, <Highlight text="a larger ΔG means a more stable protein" client:visible />.
 
 ### Putting a number on it
 
-So how do we measure what a mutation does? We compare the mutant with the original protein, called the **wild type**, and look at how much the stability changed:
+So how do we measure what a mutation does? We compare the mutant with the original protein, called the <Highlight text="wild type" type="underline" client:visible />, and look at how much the stability changed:
 
 $$
 \Delta\Delta G = \Delta G_{\text{mutant}} - \Delta G_{\text{wild type}}
 $$
 
-In the data I use, **ΔΔG > 0** means the mutation stabilises the protein, **ΔΔG < 0** means it destabilises it, and a value near zero means it has little effect. Papers differ on this sign, so always check it before comparing datasets.
+In the data I use, ΔΔG > 0 means the mutation stabilises the protein, ΔΔG < 0 means it destabilises it, and a value near zero means it has little effect. Papers differ on this sign, so always check it before comparing datasets.
 
 <Stability client:visible />
 
@@ -148,7 +146,7 @@ During a summer research project at Petnica, my teammate Pau and I trained a gra
 
 One of our experiments did something strange.
 
-The training loss started going **up**.
+The training loss started going <Highlight text="up" client:visible />.
 
 This is usually the point where you start looking for a bug. We did have bugs to find, but this particular behaviour turned out to be more interesting. The model's representations were changing in a way we didn't fully understand, and the numbers we were using to judge them weren't telling us much about whether those representations were actually useful.
 
@@ -158,7 +156,7 @@ Why was the loss increasing? And how could we tell whether the model had learned
 
 A few months later, I came back to those questions.
 
-This time, I wanted to change just one thing: **what the model was asked to predict.**
+This time, I wanted to change just one thing: <Highlight text="what the model was asked to predict" client:visible />.
 
 The answer was considerably less flattering to my original intuition than I'd expected.
 
@@ -178,9 +176,9 @@ There is experimental data for this, but obtaining it is expensive. Meanwhile, w
 
 This creates a tempting opportunity.
 
-**What if we could teach a network something useful about protein structures before showing it any stability labels?**
+<Highlight text="What if we could teach a network something useful about protein structures before showing it any stability labels?" client:visible />
 
-That is the idea behind self-supervised learning.
+That is the idea behind <Highlight text="self-supervised learning" type="underline" client:visible />.
 
 Instead of asking a model to predict a measurement we don't have, we invent a task whose answers are already contained in the data.
 
@@ -188,7 +186,7 @@ For example, we can hide part of a protein and ask the model to predict what is 
 
 But that leaves an important question.
 
-*What exactly should it predict?*
+What exactly should it predict?
 
 ## A letter or a vector?
 
@@ -198,9 +196,9 @@ One is to hide the identity of an amino acid and ask the model to recover it. Th
 
 Another is more abstract.
 
-Instead of predicting an amino acid, the model predicts the **embedding** another network would assign to the hidden position.
+Instead of predicting an amino acid, the model predicts the embedding another network would assign to the hidden position.
 
-This is the idea behind a Joint-Embedding Predictive Architecture, or JEPA.
+This is the idea behind a <Highlight text="Joint-Embedding Predictive Architecture" type="underline" client:visible />, or JEPA.
 
 The second network acts as a teacher. Its parameters are updated slowly from the student network, and the student learns to predict the teacher's representations of hidden regions.
 
@@ -214,10 +212,10 @@ I wanted to find out whether that distinction mattered here.
 
 So I trained four versions of the same graph neural network:
 
-- **A — Nothing:** no pretraining, just learn from stability labels.
-- **B — Vector:** predict the hidden residue's embedding, JEPA-style.
-- **C — Letter:** predict the hidden amino acid.
-- **D — Both:** predict the amino acid and its embedding.
+- A — Nothing: no pretraining, just learn from stability labels.
+- B — Vector: predict the hidden residue's embedding, JEPA-style.
+- C — Letter: predict the hidden amino acid.
+- D — Both: predict the amino acid and its embedding.
 
 The graph architecture, masking rate, optimisation setup and pretraining data were kept fixed.
 
@@ -247,9 +245,9 @@ The vector-prediction objective, meanwhile, did worse than not pretraining at al
 
 Not slightly worse.
 
-**It lost <CountingNumber number={0.099} decimalPlaces={3} client:visible /> <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> against the baseline.**
+It lost <CountingNumber number={0.099} decimalPlaces={3} client:visible /> <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> against the baseline.
 
-This is negative transfer: pretraining has given us a representation that makes the downstream task harder rather than easier.
+This is <Highlight text="negative transfer" type="underline" client:visible />: pretraining has given us a representation that makes the downstream task harder rather than easier.
 
 I also checked whether allowing the vector-pretrained encoder to update during fine-tuning would rescue it. That helped, but in the pilot it still performed below the no-pretraining baseline.
 
@@ -259,7 +257,7 @@ And then the representation diagnostic made the story stranger.
 
 ## The representation looked better. It wasn't.
 
-A common way to inspect learned representations without labels is to look at their **effective rank**.
+A common way to inspect learned representations without labels is to look at their <Highlight text="effective rank" type="underline" client:visible />.
 
 Very roughly, effective rank tells us how many dimensions of an embedding space are meaningfully being used.
 
@@ -283,9 +281,9 @@ To be clear, a high effective rank doesn't guarantee a good representation. It t
 
 But that's precisely the interesting part.
 
-**A representation can occupy more dimensions without being more useful.**
+<Highlight text="A representation can occupy more dimensions without being more useful." client:visible />
 
-The model was learning *something*. The problem was that my preferred diagnostic couldn't tell me whether it was the right something.
+The model was learning something. The problem was that my preferred diagnostic couldn't tell me whether it was the right something.
 
 ## The mystery of the increasing loss
 
@@ -313,7 +311,7 @@ This was the part I found particularly satisfying: what looked like two separate
 
 The rising loss and the collapse weren't unrelated symptoms.
 
-The loss was rising as the model **escaped collapse**.
+The loss was rising as the model <Highlight text="escaped collapse" client:visible />.
 
 And yet escaping collapse didn't mean it had learned features useful for stability.
 
@@ -382,4 +380,4 @@ But I like that the experiment gave me a sharper question than the one I started
 
 And perhaps that's a perfectly good result, too.
 
-*Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/graph-jepa-protein-stability). The project began at the Petnica Summer Institute with Pau Martínez.*
+Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/graph-jepa-protein-stability). The project began at the Petnica Summer Institute with Pau Martínez.

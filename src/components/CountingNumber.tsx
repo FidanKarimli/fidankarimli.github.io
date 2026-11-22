@@ -80,7 +80,8 @@ export default function CountingNumber({
         <style>{`.cn-ghost{visibility:visible!important}.cn-live{display:none}`}</style>
       </noscript>
       <style>{`
-        .cn { position: relative; display: inline-block; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+        /* Plain by default (it just counts); big stat rows style themselves via className. */
+        .cn { position: relative; display: inline-block; font-variant-numeric: tabular-nums; }
         .cn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
         .cn-ghost { visibility: hidden; }
         .cn-live { position: absolute; inset: 0; text-align: right; }

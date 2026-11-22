@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import "./jepa/jepa.css"; // shared colour tokens
+import { useRoughHighlight } from "./useRoughHighlight";
 
 /**
  * A word with a small definition card that pops up on hover, keyboard focus, or tap.
@@ -25,6 +26,8 @@ export default function HoverCard({
   const [above, setAbove] = useState(false);
   const root = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLSpanElement>(null);
+  const triggerEl = useRef<HTMLSpanElement>(null);
+  useRoughHighlight(triggerEl, 150); // same single emphasis style as the post's highlights
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const id = useId();
 
@@ -78,6 +81,7 @@ export default function HoverCard({
       onMouseLeave={closeSoon}
     >
       <span
+        ref={triggerEl}
         className="hc-trigger"
         role="button"
         tabIndex={0}
@@ -108,14 +112,8 @@ export default function HoverCard({
       </span>
       <style>{`
         .hc { position: relative; display: inline; }
-        .hc-trigger {
-          cursor: help;
-          font-weight: 700;
-          text-decoration: underline dotted var(--accent);
-          text-decoration-thickness: 2px;
-          text-underline-offset: 0.2em;
-        }
-        .hc-trigger:hover, .hc-trigger[aria-expanded="true"] { color: var(--accent); }
+        /* The marker stroke itself comes from useRoughHighlight; the card is what is extra. */
+        .hc-trigger { cursor: help; }
         .hc-trigger:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 2px; }
         .hc-card {
           position: absolute;
