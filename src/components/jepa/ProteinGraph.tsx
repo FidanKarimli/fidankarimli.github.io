@@ -2,9 +2,9 @@ import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Figure, Segmented } from "./shared";
 
 /* A made-up 14-residue helix-turn-helix. Conceptual only: not an experimental structure. */
-const SEQ = "MSKLIEVALFDRAY".split("");
+export const SEQ = "MSKLIEVALFDRAY".split("");
 const NAMES: Record<string, string> = { M: "Met", S: "Ser", K: "Lys", L: "Leu", I: "Ile", E: "Glu", V: "Val", A: "Ala", F: "Phe", D: "Asp", R: "Arg", Y: "Tyr" };
-const N = SEQ.length;
+export const N = SEQ.length;
 const K_SHOWN = 4; // the real experiment uses 16
 
 const P3 = Array.from({ length: N }, (_, i) => {
@@ -15,25 +15,25 @@ const P3 = Array.from({ length: N }, (_, i) => {
     : { x: Math.cos(th) * rad + sep, y: (6 - (i - 7)) * step + 0.2, z: Math.sin(th) * rad };
 });
 const dist = (a: number, b: number) => Math.hypot(P3[a].x - P3[b].x, P3[a].y - P3[b].y, P3[a].z - P3[b].z);
-const SPATIAL = Array.from({ length: N }, (_, i) =>
+export const SPATIAL = Array.from({ length: N }, (_, i) =>
   [...Array(N).keys()].filter(j => j !== i).sort((a, b) => dist(i, a) - dist(i, b)).slice(0, K_SHOWN)
 );
 const SEQNB = Array.from({ length: N }, (_, i) => [i - 2, i - 1, i + 1, i + 2].filter(j => j >= 0 && j < N));
 const farCount = (i: number) => SPATIAL[i].filter(j => Math.abs(j - i) > 4).length;
 // The mutation example: the buried-looking hydrophobic residue with the most far-apart contacts.
-const MUT = [...Array(N).keys()]
+export const MUT = [...Array(N).keys()]
   .filter(i => ["L", "I", "V", "F"].includes(SEQ[i]))
   .sort((a, b) => farCount(b) - farCount(a) || a - b)[0];
 
 // Rounded so server and browser print identical coordinates (hydration).
 const r2 = (v: number) => Math.round(v * 100) / 100;
 const PHI = (35 * Math.PI) / 180;
-const FOLD = P3.map(p => {
+export const FOLD = P3.map(p => {
   const X = p.x * Math.cos(PHI) + p.z * Math.sin(PHI);
   const depth = -p.x * Math.sin(PHI) + p.z * Math.cos(PHI);
   return { sx: r2(130 + X * 38), sy: r2(232 - p.y * 28.5), depth: r2(depth) };
 });
-const RING = Array.from({ length: N }, (_, i) => {
+export const RING = Array.from({ length: N }, (_, i) => {
   const a = ((-90 + (i * 360) / N) * Math.PI) / 180;
   return { sx: r2(120 + 88 * Math.cos(a)), sy: r2(120 + 88 * Math.sin(a)) };
 });

@@ -9,19 +9,16 @@ typingTitle: true
 tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
 ---
 
-import ProteinGraph from '@/components/jepa/ProteinGraph.tsx';
 import PredictionGame from '@/components/jepa/PredictionGame.tsx';
-import ResultBars from '@/components/jepa/ResultBars.tsx';
-import RankReversal from '@/components/jepa/RankReversal.tsx';
-import LossCollapse from '@/components/jepa/LossCollapse.tsx';
-import MoreData from '@/components/jepa/MoreData.tsx';
 import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
 import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
-import { MutationNotation, Stability } from '@/components/jepa/ProteinBasics.tsx';
+import TerminalReplay from '@/components/jepa/TerminalReplay.tsx';
+import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore } from '@/components/jepa/HandDrawn.tsx';
 import StructureStory from '@/components/jepa/StructureStory.tsx';
 import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
+import MutationDrawing from '@/components/jepa/MutationDrawing.tsx';
 
 ## Where this started
 
@@ -76,10 +73,7 @@ The sequence is only the first level. Proteins are not random strings of letters
 
 A mutation is a change in the sequence, and the simplest kind is a <Highlight text="point mutation" type="underline" client:visible />: one amino acid swapped for another. Sometimes nothing happens. Sometimes everything does. In sickle cell disease, a single swap at position 6 of hemoglobin's 146-amino-acid chain is enough to change the shape of red blood cells.
 
-<div class="photo-medium photo-adapt">
-  <img class="light-version" src="/images/mutations-diagram.png" alt="Diagram: a change in the DNA letters of a gene leads to a protein that no longer works, so the normal characteristic is lost" width="780" height="847" loading="lazy" decoding="async" />
-  <img class="dark-version" src="/images/mutations-diagram-dark.png" alt="Diagram: a change in the DNA letters of a gene leads to a protein that no longer works, so the normal characteristic is lost" width="780" height="847" loading="lazy" decoding="async" />
-</div>
+<MutationDrawing client:visible />
 
 Depending on where it happens and what the new amino acid brings, a mutation can change how tightly the protein packs, how it binds other molecules, or how stable the fold is. <Highlight text="This project is about the last one." client:visible />
 
@@ -99,13 +93,13 @@ $$
 
 In the data I use, ΔΔG > 0 means the mutation stabilises the protein, ΔΔG < 0 means it destabilises it, and a value near zero means it has little effect. Papers differ on this sign, so always check it before comparing datasets.
 
-<Stability client:visible />
+<HandStability client:visible />
 
 The measurements come from the MegaScale experiment. Many protein variants are exposed to a protease, an enzyme that cuts unfolded proteins more easily than folded ones, so the more a variant survives, the more stable it is. Comparing each mutant with its wild type then gives ΔΔG, and that number is what our model will learn to predict.
 
 One last bit of notation. A mutation such as E15Q is written as three pieces: the original amino acid (E, glutamate), the position (15) and the new amino acid (Q, glutamine).
 
-<MutationNotation />
+<HandMutationName client:visible />
 
 To score a mutation like this, it is not enough to know the letters. The model also needs to know where position 15 sits in the folded protein and what surrounds it. So the task is: take a protein structure and one mutation, and <Highlight text="predict ΔΔG" client:visible />.
 
@@ -137,7 +131,7 @@ Imagine replacing a single amino acid in a protein. The new one might fit comfor
 
 We'd like to predict how that replacement changes the protein's stability.
 
-<ProteinGraph client:visible />
+<HandGraph client:visible />
 
 There is experimental data for this, but obtaining it is expensive. Meanwhile, we have far more protein structures than we have corresponding stability measurements.
 
@@ -202,7 +196,7 @@ For the downstream task, I used MegaScale stability measurements and evaluated o
 
 Here is the result, averaged across three random seeds. Higher is better.
 
-<ResultBars client:visible />
+<HandResults client:visible />
 
 The letter-prediction objective worked.
 
@@ -242,7 +236,7 @@ And yet the model with the higher effective rank was much worse at predicting pr
 
 This was the opposite of what I'd have expected from the diagnostic alone.
 
-<RankReversal client:visible />
+<HandRank client:visible />
 
 To be clear, a high effective rank doesn't guarantee a good representation. It tells us something about its geometry, not whether it contains the information a downstream task needs.
 
@@ -270,9 +264,11 @@ Then the representation started spreading out again.
 
 The slowly updated teacher was changing, the targets became less trivial, and the prediction task became harder.
 
-So the loss increased.
+So the loss increased. Here is the log from the vector-only run:
 
-<LossCollapse client:visible />
+<TerminalReplay client:visible />
+
+<HandLoss client:visible />
 
 This was the part I found particularly satisfying: what looked like two separate problems in our earlier experiment were connected.
 
@@ -304,7 +300,7 @@ It had become substantially better at the task I had trained it to solve.
 
 But it had not become better at predicting stability.
 
-<MoreData client:visible />
+<HandMore client:visible />
 
 So now I had two observations:
 

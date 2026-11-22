@@ -38,7 +38,6 @@ export default function PolypeptideChain() {
   return (
     <Figure
       label="A polypeptide chain drawn as a string of colored beads, zooming in on four neighbouring amino acids: Phe, Leu, Ser and Cys"
-      caption="Zoom in on any four neighbours and you can see the amino acids one by one."
     >
       <p className="jf-title">A polypeptide chain</p>
       <p className="jf-sub">Many amino acids linked in a row. Each bead is one amino acid.</p>
