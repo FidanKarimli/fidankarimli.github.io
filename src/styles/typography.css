@@ -106,14 +106,22 @@
       border-radius: 0.5rem;
     }
 
-    /* A diagram with a transparent background: no frame, and in dark mode the black line art
-       flips to light while the colours stay recognisable. */
+    /* A diagram with a transparent background and a separate dark-mode version: no frame, and
+       the picture that matches the current theme is the one shown. */
     .photo-adapt img {
       border: 0;
       background: none;
 
-      [data-theme="dark"] & {
-        filter: invert(1) hue-rotate(180deg);
+      &.dark-version {
+        display: none;
+      }
+
+      [data-theme="dark"] &.dark-version {
+        display: block;
+      }
+
+      [data-theme="dark"] &.light-version {
+        display: none;
       }
     }
 
