@@ -240,7 +240,7 @@ export function HandGraph() {
         <p className="hg-title">How a protein becomes a graph</p>
         <p className="hg-sub">Hover a letter to see who it touches.</p>
 
-        <svg viewBox="0 0 720 132" role="group" aria-label="The chain of 14 amino acids. Use the left and right arrow keys to pick one." onKeyDown={onKey}>
+        <svg viewBox="0 0 720 148" role="group" aria-label="The chain of 14 amino acids. Use the left and right arrow keys to pick one." onKeyDown={onKey}>
           <defs>
             <filter id="hd-wob-c" filterUnits="userSpaceOnUse" x="-20" y="-20" width="760" height="320">
               <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="11" result="n" />
@@ -253,7 +253,7 @@ export function HandGraph() {
           })}
           <path className="st" d={`M${BX(0) - 8} 98 L${BX(N - 1) + 8} 98`} stroke="var(--hd-soft)" strokeWidth={1.6} strokeOpacity={0.5} filter="url(#hd-wob-c)" />
           {SEQ.map((_, i) => node(i, BX(i), 98, 19, 26, `c${i}`, true))}
-          <text className="t ts" x={360} y={128} textAnchor="middle" style={{ fontSize: 21 }}>1 · a chain of amino acids</text>
+          <text className="t ts" x={360} y={144} textAnchor="middle" style={{ fontSize: 21 }}>1 · a chain of amino acids</text>
         </svg>
 
         <div className="hg-two">

@@ -21,7 +21,7 @@ export default function DatasetNumbers() {
       ))}
       <style>{`
         .dn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.8rem auto; }
-        .dn-item { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+        .dn-item { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0; text-align: left; }
         .dn .dn-num { font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.1; font-weight: 700; color: var(--foreground); font-variant-numeric: tabular-nums; }
         .dn-item b { font-size: 0.95rem; }
         .dn-item .dn-sub { font-size: 0.8rem; color: var(--fig-note); line-height: 1.35; }
