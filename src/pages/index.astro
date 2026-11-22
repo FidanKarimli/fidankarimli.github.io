@@ -9,6 +9,7 @@ import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
 import PhotoCollage from "@/components/PhotoCollage.astro";
 import PostTile from "@/components/PostTile.astro";
+import AuroraBackground from "@/components/AuroraBackground.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
@@ -26,6 +27,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
 ---
 
 <Layout>
+  <AuroraBackground />
   <Header />
   <main
     id="main-content"

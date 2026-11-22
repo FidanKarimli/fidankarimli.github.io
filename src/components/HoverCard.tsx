@@ -138,18 +138,24 @@ export default function HoverCard({
           box-shadow: 0 8px 24px color-mix(in srgb, var(--foreground) 14%, transparent);
           transform: translateX(calc(-50% + var(--hc-shift, 0px)));
           transform-origin: top center;
-          opacity: 0;
-          visibility: hidden;
-          pointer-events: none;
+          /* Not in the page at all until opened, so copying text around it stays clean. */
+          display: none;
         }
         .hc-card.above { top: auto; bottom: calc(100% + 8px); transform-origin: bottom center; }
-        .hc-card.open { opacity: 1; visibility: visible; pointer-events: auto; }
+        .hc-card.open { display: block; }
         .hc-title { display: block; font-weight: 700; margin-bottom: 0.15rem; }
         .hc-body { display: block; color: var(--muted-foreground); }
         @media (prefers-reduced-motion: no-preference) {
-          .hc-card { transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s; transform: translateX(calc(-50% + var(--hc-shift, 0px))) translateY(4px) scale(0.97); }
-          .hc-card.above { transform: translateX(calc(-50% + var(--hc-shift, 0px))) translateY(-4px) scale(0.97); }
-          .hc-card.open { transform: translateX(calc(-50% + var(--hc-shift, 0px))) translateY(0) scale(1); }
+          .hc-card.open { animation: hc-in 0.16s ease both; }
+          .hc-card.open.above { animation-name: hc-in-up; }
+          @keyframes hc-in {
+            from { opacity: 0; transform: translateX(calc(-50% + var(--hc-shift, 0px))) translateY(4px) scale(0.97); }
+            to { opacity: 1; transform: translateX(calc(-50% + var(--hc-shift, 0px))); }
+          }
+          @keyframes hc-in-up {
+            from { opacity: 0; transform: translateX(calc(-50% + var(--hc-shift, 0px))) translateY(-4px) scale(0.97); }
+            to { opacity: 1; transform: translateX(calc(-50% + var(--hc-shift, 0px))); }
+          }
         }
       `}</style>
     </span>
