@@ -1,0 +1,93 @@
+/* Shared look for the figures in "Does it matter what you predict?".
+   Colours are tokens so light and dark follow the site's data-theme switch. */
+:root,
+[data-theme="light"] {
+  --arm-a: #5f6672;
+  --arm-b: #7357a8;
+  --arm-c: #0b7a71;
+  --arm-d: #96610f;
+  --fig-sel: var(--accent);
+  --fig-card: color-mix(in srgb, var(--muted) 28%, var(--background));
+  --fig-line: color-mix(in srgb, var(--foreground) 16%, transparent);
+  --fig-faint: color-mix(in srgb, var(--foreground) 9%, transparent);
+  --fig-note: var(--muted-foreground);
+}
+[data-theme="dark"] {
+  --arm-a: #aab2c0;
+  --arm-b: #b9a2ee;
+  --arm-c: #43c6b8;
+  --arm-d: #f2b34b;
+  --fig-card: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --fig-line: color-mix(in srgb, var(--foreground) 22%, transparent);
+  --fig-faint: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --fig-note: var(--muted-foreground);
+}
+
+.jf {
+  --pad: 1rem;
+  margin: 2.25rem auto;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--foreground);
+}
+.jf * { box-sizing: border-box; }
+.jf-card {
+  background: var(--fig-card);
+  border: 1px solid var(--fig-line);
+  border-radius: 0.75rem;
+  padding: var(--pad);
+}
+.jf-title { font-weight: 700; font-size: 0.95rem; margin: 0 0 0.15rem; }
+.jf-sub { color: var(--fig-note); margin: 0 0 0.75rem; font-size: 0.85rem; }
+.jf figcaption.jf-caption {
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  opacity: 1;
+  color: var(--foreground);
+  font-style: italic;
+}
+.jf-note { color: var(--fig-note); font-size: 0.8rem; margin-top: 0.5rem; }
+.jf-tag {
+  display: inline-block; font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--fig-note); border: 1px solid var(--fig-line); border-radius: 999px; padding: 0.05rem 0.5rem;
+}
+.jf svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+.jf svg text { font-family: var(--font-ui); fill: var(--foreground); }
+.jf .muted { fill: var(--fig-note) !important; color: var(--fig-note); }
+.jf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.arm-a { --c: var(--arm-a); } .arm-b { --c: var(--arm-b); }
+.arm-c { --c: var(--arm-c); } .arm-d { --c: var(--arm-d); }
+
+/* segmented control (native radios) */
+.jf-seg { border: 0; padding: 0; margin: 0 0 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.jf-seg legend { float: left; margin-right: 0.6rem; padding: 0; color: var(--fig-note); font-size: 0.8rem; }
+.jf-seg .opts { display: inline-flex; border: 1px solid var(--fig-line); border-radius: 0.5rem; overflow: hidden; background: var(--background); }
+.jf-seg label { position: relative; cursor: pointer; }
+.jf-seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.jf-seg span { display: block; padding: 0.35rem 0.8rem; font-size: 0.85rem; white-space: nowrap; }
+.jf-seg label + label span { border-left: 1px solid var(--fig-line); }
+.jf-seg input:checked + span { background: var(--foreground); color: var(--background); font-weight: 700; }
+.jf-seg input:focus-visible + span { outline: 2px dashed var(--accent); outline-offset: -3px; }
+
+.jf-btn {
+  font: inherit; font-size: 0.85rem; color: var(--foreground); background: var(--background);
+  border: 1px solid var(--fig-line); border-radius: 0.5rem; padding: 0.35rem 0.8rem;
+}
+.jf-btn:hover { border-color: var(--foreground); }
+.jf-btn[aria-pressed="true"], .jf-btn[aria-expanded="true"] { border-color: var(--foreground); }
+
+.jf-chip {
+  display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 0.35rem;
+  background: var(--c); color: var(--background); font-weight: 700; font-size: 0.78rem; flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .jf-anim { transition: all 0.35s ease; }
+  .jf-fade { animation: jf-fade 0.35s ease both; }
+  @keyframes jf-fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes jf-flow { to { stroke-dashoffset: -16; } }
+  .jf-flow { animation: jf-flow 1.2s linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) { .jf-anim { transition: none; } }

@@ -1,0 +1,254 @@
+---
+title: 'Does It Matter What You Predict?'
+description: 'On self-supervised learning, protein stability, and why a better-looking representation can turn out to be a worse one.'
+pubDatetime: 2026-11-01T00:00:00Z
+featured: true
+cover: '../../assets/covers/jepa.svg'
+subtitle: 'A better-looking representation, a worse one'
+tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
+---
+
+import ProteinGraph from '@/components/jepa/ProteinGraph.tsx';
+import PredictionGame from '@/components/jepa/PredictionGame.tsx';
+import ResultBars from '@/components/jepa/ResultBars.tsx';
+import RankReversal from '@/components/jepa/RankReversal.tsx';
+import LossCollapse from '@/components/jepa/LossCollapse.tsx';
+import MoreData from '@/components/jepa/MoreData.tsx';
+
+During a summer research project at Petnica, my teammate Pau and I trained a graph neural network to learn representations of proteins.
+
+One of our experiments did something strange.
+
+The training loss started going **up**.
+
+This is usually the point where you start looking for a bug. We did have bugs to find, but this particular behaviour turned out to be more interesting. The model's representations were changing in a way we didn't fully understand, and the numbers we were using to judge them weren't telling us much about whether those representations were actually useful.
+
+We finished the project with two questions I couldn't quite put away.
+
+Why was the loss increasing? And how could we tell whether the model had learned something meaningful about proteins?
+
+A few months later, I came back to those questions.
+
+This time, I wanted to change just one thing: **what the model was asked to predict.**
+
+The answer was considerably less flattering to my original intuition than I'd expected.
+
+## First, what are we trying to learn?
+
+Proteins are long chains of amino acids that fold into three-dimensional structures.
+
+I like to think of them as complicated little arrangements where a change in one place can affect something surprisingly far away.
+
+Imagine replacing a single amino acid in a protein. The new one might fit comfortably into the existing structure. Or it might disrupt an interaction that was helping hold everything together.
+
+We'd like to predict how that replacement changes the protein's stability.
+
+<ProteinGraph client:visible />
+
+There is experimental data for this, but obtaining it is expensive. Meanwhile, we have far more protein structures than we have corresponding stability measurements.
+
+This creates a tempting opportunity.
+
+**What if we could teach a network something useful about protein structures before showing it any stability labels?**
+
+That is the idea behind self-supervised learning.
+
+Instead of asking a model to predict a measurement we don't have, we invent a task whose answers are already contained in the data.
+
+For example, we can hide part of a protein and ask the model to predict what is missing.
+
+But that leaves an important question.
+
+*What exactly should it predict?*
+
+## A letter or a vector?
+
+There are several ways to play this game.
+
+One is to hide the identity of an amino acid and ask the model to recover it. There are 20 standard amino acids, so this becomes a 20-way classification problem.
+
+Another is more abstract.
+
+Instead of predicting an amino acid, the model predicts the **embedding** another network would assign to the hidden position.
+
+This is the idea behind a Joint-Embedding Predictive Architecture, or JEPA.
+
+The second network acts as a teacher. Its parameters are updated slowly from the student network, and the student learns to predict the teacher's representations of hidden regions.
+
+The appealing idea is that the network doesn't have to reconstruct every detail of its input. It can learn to predict something more abstract.
+
+That sounds rather nice.
+
+But there is a distinction between learning to solve a clever pretraining task and learning features that help with the problem we actually care about.
+
+I wanted to find out whether that distinction mattered here.
+
+So I trained four versions of the same graph neural network:
+
+- **A — Nothing:** no pretraining, just learn from stability labels.
+- **B — Vector:** predict the hidden residue's embedding, JEPA-style.
+- **C — Letter:** predict the hidden amino acid.
+- **D — Both:** predict the amino acid and its embedding.
+
+The graph architecture, masking rate, optimisation setup and pretraining data were kept fixed.
+
+The pretrained encoders were then frozen for the downstream stability task. The no-pretraining baseline learned its encoder directly from labelled data.
+
+If one pretraining objective produced substantially better features, this setup should give us a way to see it.
+
+<PredictionGame client:visible />
+
+## The result I didn't want to ignore
+
+I started with 11,566 experimentally determined protein domains from SCOPe.
+
+For the downstream task, I used MegaScale stability measurements and evaluated on proteins held out from training.
+
+Here is the result, averaged across three random seeds. Higher is better.
+
+<ResultBars client:visible />
+
+The letter-prediction objective worked.
+
+A frozen encoder trained without stability labels outperformed a model whose entire encoder had been trained on the labelled task.
+
+The vector-prediction objective, meanwhile, did worse than not pretraining at all.
+
+Not slightly worse.
+
+**It lost 0.099 Spearman correlation against the baseline.**
+
+This is negative transfer: pretraining has given us a representation that makes the downstream task harder rather than easier.
+
+I also checked whether allowing the vector-pretrained encoder to update during fine-tuning would rescue it. That helped, but in the pilot it still performed below the no-pretraining baseline.
+
+Apparently, whatever the network had learned was not particularly helpful for predicting stability.
+
+And then the representation diagnostic made the story stranger.
+
+## The representation looked better. It wasn't.
+
+A common way to inspect learned representations without labels is to look at their **effective rank**.
+
+Very roughly, effective rank tells us how many dimensions of an embedding space are meaningfully being used.
+
+If a network maps every input to essentially the same point, its representation has collapsed. Its effective rank will be very low.
+
+A larger effective rank suggests the representation is more spread out.
+
+So I measured it.
+
+The JEPA model used about 74 effective dimensions out of 128.
+
+The letter-prediction model used about 62.
+
+And yet the model with the higher effective rank was much worse at predicting protein stability.
+
+This was the opposite of what I'd have expected from the diagnostic alone.
+
+<RankReversal client:visible />
+
+To be clear, a high effective rank doesn't guarantee a good representation. It tells us something about its geometry, not whether it contains the information a downstream task needs.
+
+But that's precisely the interesting part.
+
+**A representation can occupy more dimensions without being more useful.**
+
+The model was learning *something*. The problem was that my preferred diagnostic couldn't tell me whether it was the right something.
+
+## The mystery of the increasing loss
+
+Remember the loss that kept rising during the summer project?
+
+The effective-rank measurements helped explain it.
+
+Early in JEPA training, the network nearly collapsed. Many residues were mapped to almost the same embedding.
+
+That makes the prediction task wonderfully easy.
+
+If every target looks similar, you don't need a clever predictor. You can produce almost the same answer everywhere.
+
+At epoch 1, the effective rank fell to 12.8 and the loss reached 0.007.
+
+Then the representation started spreading out again.
+
+The slowly updated teacher was changing, the targets became less trivial, and the prediction task became harder.
+
+So the loss increased.
+
+<LossCollapse client:visible />
+
+This was the part I found particularly satisfying: what looked like two separate problems in our earlier experiment were connected.
+
+The rising loss and the collapse weren't unrelated symptoms.
+
+The loss was rising as the model **escaped collapse**.
+
+And yet escaping collapse didn't mean it had learned features useful for stability.
+
+That distinction is worth remembering. When the target itself is moving, a training-loss curve doesn't necessarily tell the story we expect it to.
+
+## What if we just give it more data?
+
+Perhaps JEPA simply needed more proteins.
+
+To investigate that, I repeated the pretrained experiments using 26,057 predicted structures from AlphaFold, more than twice the size of the original corpus.
+
+The vector model improved, from 0.506 to 0.543.
+
+But it was still behind the no-pretraining baseline.
+
+The letter model? Almost unchanged: 0.640 became 0.639.
+
+The combined model? Also effectively unchanged.
+
+Something even more interesting happened with the letter model. Its masked amino-acid prediction accuracy rose from 26.7% to 35.3%.
+
+It had become substantially better at the task I had trained it to solve.
+
+But it had not become better at predicting stability.
+
+<MoreData client:visible />
+
+So now I had two observations:
+
+1. A representation with higher effective rank could perform worse downstream.
+2. A model that got better at its pretraining task could show no downstream improvement.
+
+Neither diagnostic was a reliable guide to what I ultimately cared about in this experiment.
+
+There is an important caveat: the AlphaFold corpus differs from SCOPe in more than size, and the larger run also involved more optimiser steps. This isn't a clean scaling experiment.
+
+What it does show is that the ordering survived a second, larger and different corpus.
+
+## What I'm taking away
+
+I started this project asking which self-supervised objective was better for protein stability.
+
+For this particular encoder, dataset and training setup, masked amino-acid prediction was clearly more useful than predicting JEPA embeddings.
+
+Combining the two objectives performed similarly to letter prediction alone. The additional vector objective also prevented the early collapse seen in the vector-only model, but didn't give a meaningful downstream improvement.
+
+I don't think this means JEPA is a bad idea for proteins.
+
+There are too many things I haven't tested: different predictors, masking strategies, longer pretraining, architectures, and downstream tasks.
+
+What it does make me question is how casually we sometimes interpret signs of successful representation learning.
+
+A lower loss is not always better learning.
+
+A more spread-out embedding space is not necessarily a more useful one.
+
+And solving a pretraining task more accurately does not automatically mean we've learned more about the downstream problem.
+
+I still want to understand what the letter-prediction model learned that the vector-prediction model didn't.
+
+Maybe it captures local geometric constraints more effectively. Maybe the JEPA objective needs a different design to encourage stability-relevant features.
+
+I don't know yet.
+
+But I like that the experiment gave me a sharper question than the one I started with.
+
+And perhaps that's a perfectly good result, too.
+
+*Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/graph-jepa-protein-stability). The project began at the Petnica Summer Institute with Pau Martínez.*
