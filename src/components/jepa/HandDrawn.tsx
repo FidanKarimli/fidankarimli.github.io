@@ -445,7 +445,7 @@ export function HandLoss() {
 /* ---------------- More data, same lesson ---------------- */
 export function HandMore() {
   const S = DATA.corpora.scope, A = DATA.corpora.alphafold;
-  const y = (v: number) => r2(74 + ((0.7 - v) / 0.25) * 170);
+  const y = (v: number) => r2(74 + ((0.66 - v) / 0.18) * 180);
   const XL = 200, XR = 440;
   const spread = (vals: Record<string, number>, gap = 24) => {
     const items = Object.entries(vals).map(([k, v]) => ({ k, y: y(v) })).sort((a, b) => a.y - b.y);
@@ -469,7 +469,7 @@ export function HandMore() {
           <text className="t tb" x={XR} y={24} textAnchor="middle" style={{ fontSize: 24 }}>AlphaFold</text>
           <text className="t ts" x={XR} y={46} textAnchor="middle" style={{ fontSize: 18 }}>26,057 predicted</text>
 
-          <path className="st" d={`M40 ${base} L600 ${base}`} stroke="var(--hd-ink)" strokeWidth={1.8} strokeDasharray="2 7" strokeOpacity={0.6} filter="url(#hd-wob-g)" />
+          <path className="st" d={`M${XL - 20} ${base} L${XR + 20} ${base}`} stroke="var(--hd-ink)" strokeWidth={1.8} strokeDasharray="2 7" strokeOpacity={0.6} filter="url(#hd-wob-g)" />
           <text className="t ts" x={320} y={base + 24} textAnchor="middle" style={{ fontSize: 19 }}>no pretraining · {f3(S.spearman.A.mean)}</text>
 
           {trio.map(a => {
