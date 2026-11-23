@@ -9,6 +9,7 @@ typingTitle: true
 tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
 ---
 
+import DataExamples from '@/components/jepa/DataExamples.tsx';
 import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
 import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
@@ -107,6 +108,12 @@ That gives us the task for the rest of the post: <Highlight text="given a protei
 Before the details, here is the whole experiment in one picture. Everything after this explains one step, in order.
 
 <HandOverview client:visible />
+
+### The data
+
+One example from each dataset.
+
+<DataExamples client:visible />
 
 ## Our first attempt at Petnica
 

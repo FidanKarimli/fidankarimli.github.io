@@ -9,6 +9,7 @@ import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
 import PhotoCollage from "@/components/PhotoCollage.astro";
 import PostTile from "@/components/PostTile.astro";
+import PhotoPileSort from "@/components/PhotoPileSort.tsx";
 import GlyphBackground from "@/components/GlyphBackground.tsx";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -23,6 +24,13 @@ const t = useTranslations(locale);
 const posts = await getCollection("posts");
 const sortedPosts = getSortedPosts(posts);
 const recentPosts = sortedPosts;
+const galleryImages = [
+  { src: "/images/gallery/transit-hack.jpg", alt: "Our team holding the 1st place cheque in the Urban Planning category at Transit Hack" },
+  { src: "/images/gallery/weun-summer-school.jpg", alt: "Me in front of the 2025 Worldwide Energy University Network Summer School board in Beijing" },
+  { src: "/images/gallery/teknofest.jpg", alt: "Holding the Baku Higher Oil School flag at Teknofest" },
+  { src: "/images/gallery/certificates.jpg", alt: "Three of us holding certificates at Baku Higher Oil School" },
+  { src: "/images/gallery/maire-winners.jpg", alt: "Block Power team with the 3,000 AZN winner cheque for the energy transition challenge" },
+];
 const homePath = getRelativeLocaleUrl(locale, "");
 ---
 
@@ -67,8 +75,11 @@ const homePath = getRelativeLocaleUrl(locale, "");
           <p class="mt-2">
             Right now I'm a Junior AI Engineer at the National AI Center of
             Azerbaijan, where I adapt language models to Azerbaijani law. I also
-            do research on recommender systems with Prof. Yusuf Yaslan at
-            Istanbul Technical University. I studied Process Automation
+            do research on recommender systems with{" "}
+            <a
+              class="hover:text-accent underline decoration-dashed underline-offset-4"
+              href="https://web.itu.edu.tr/yyaslan/">Prof. Yusuf Yaslan</a
+            >{" "}at Istanbul Technical University. I studied Process Automation
             Engineering at Baku Higher Oil School. More on the{" "}
             <LinkButton
               class="hover:text-accent underline decoration-dashed underline-offset-4"
@@ -89,24 +100,35 @@ const homePath = getRelativeLocaleUrl(locale, "");
         </div>
         <PhotoCollage class="mt-4 md:mt-16" />
       </div>
-      <h2 class="mt-8 text-xl font-semibold tracking-wide">
-        Research interests
-      </h2>
-      <ul class="mt-2 list-disc space-y-1 ps-5">
-        <li>
-          <strong>Graph learning and recommender systems</strong>: suggesting
-          the right items to users who have little history.
-        </li>
-        <li>
-          <strong>Language models for low-resource languages</strong>: adapting
-          language models and search to Azerbaijani and to law.
-        </li>
-        <li>
-          <strong>Self-supervised learning for science</strong>: learning from
-          unlabelled graphs and proteins, like my JEPA project on protein
-          stability.
-        </li>
-      </ul>
+      <p class="mt-8">
+        I'm currently interested in{" "}
+        <strong>information retrieval</strong>,{" "}
+        <strong>graph neural networks</strong>,{" "}
+        <strong>recommender systems</strong>,{" "}
+        <strong>low-resource NLP</strong>, <strong>LLMs</strong> and{" "}
+        <strong>scientific ML</strong>.
+      </p>
+      <p class="mt-2">
+        I'm always happy to collaborate on these topics. Feel free to write to
+        me at{" "}
+        <a
+          class="hover:text-accent underline decoration-dashed underline-offset-4"
+          href="mailto:karimlifidan@outlook.com">karimlifidan@outlook.com</a
+        >.
+      </p>
+    </section>
+
+    <section id="moments" class="border-border border-b py-10">
+      <h2 class="text-2xl font-semibold tracking-wide">Some moments</h2>
+      <p class="mt-2 text-sm opacity-70">Scroll inside the pile to toss the photos down.</p>
+      <PhotoPileSort
+        client:visible
+        images={galleryImages}
+        count={galleryImages.length}
+        size={0.4}
+        length={6}
+        className="mx-auto mt-6 max-w-md rounded-lg border border-border"
+      />
     </section>
 
     {

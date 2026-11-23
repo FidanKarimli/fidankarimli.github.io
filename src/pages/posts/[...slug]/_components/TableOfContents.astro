@@ -16,11 +16,11 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
       <aside
         data-pagefind-ignore
         aria-label="Contents"
-        class="toc absolute top-0 right-full me-10 hidden h-full w-52 xl:block"
+        class="toc absolute top-0 right-full me-8 hidden h-full w-44 min-[1400px]:block"
       >
         <nav class="toc-nav sticky top-24">
-          <p class="font-ui mb-2 text-xs tracking-widest uppercase">Contents</p>
-          <ol class="text-sm leading-snug">
+          <p class="font-ui mb-2 text-[0.65rem] tracking-widest uppercase">Contents</p>
+          <ol class="text-xs leading-snug">
             {items.map(h => (
               <li>
                 <a href={`#${h.slug}`} data-toc-link={h.slug} data-depth={h.depth}>
@@ -33,7 +33,7 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
       </aside>
 
       {/* Narrow screens: a fold-out box above the post. */}
-      <details data-pagefind-ignore class="toc-mobile mt-6 xl:hidden">
+      <details data-pagefind-ignore class="toc-mobile mt-6 min-[1400px]:hidden">
         <summary class="font-ui cursor-pointer text-sm">Contents</summary>
         <ol class="mt-2 space-y-1 text-sm">
           {items.map(h => (
@@ -84,7 +84,7 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
 
 <style>
   .toc {
-    opacity: 0.55;
+    opacity: 0.4;
     transition: opacity 0.2s;
   }
   .toc:hover,
@@ -105,12 +105,12 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
   .toc a {
     display: block;
     border-inline-start: 2px solid transparent;
-    padding-block: 0.22rem;
+    padding-block: 0.18rem;
     padding-inline-start: calc(0.75rem - 2px);
   }
   .toc a[data-depth="3"] {
-    padding-inline-start: calc(1.6rem - 2px);
-    font-size: 0.93em;
+    padding-inline-start: calc(1.4rem - 2px);
+    font-size: 0.95em;
   }
   .toc a:hover {
     color: var(--accent);
