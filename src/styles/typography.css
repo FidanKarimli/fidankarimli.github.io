@@ -159,18 +159,26 @@
       color: var(--muted-foreground);
 
       ul {
-        margin: 0.5rem 0 0;
-        padding-inline-start: 1.1rem;
-      }
-
-      li,
-      a {
-        color: inherit;
-        font-size: inherit;
+        margin: 0.6rem 0 0;
+        padding: 0;
+        list-style: none;
       }
 
       li {
-        margin: 0.25rem 0;
+        margin: 0.5rem 0;
+        padding-inline-start: 0;
+        font-size: inherit;
+      }
+
+      /* Titles read as plain text; they only change colour on hover. */
+      a {
+        color: var(--foreground);
+        font-size: inherit;
+        text-decoration: none;
+
+        &:hover {
+          color: var(--accent);
+        }
       }
     }
 
