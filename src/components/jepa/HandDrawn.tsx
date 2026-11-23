@@ -749,3 +749,77 @@ export function HandFold() {
     </Figure>
   );
 }
+
+/* ---------------- The whole pipeline, in five numbered steps ---------------- */
+const OVERVIEW: { label: string; steps: { t: string; d: string }[] }[] = [
+  {
+    label: "Without stability labels",
+    steps: [
+      { t: "Graph", d: "Residues become nodes, contacts become edges." },
+      { t: "Encoder", d: "A graph neural network gives every residue a vector." },
+      { t: "Pretrain", d: "Hide 20% of the residues and predict them." },
+    ],
+  },
+  {
+    label: "With stability labels",
+    steps: [
+      { t: "Fine-tune", d: "Learn ΔΔG from about 215,000 mutations." },
+      { t: "Test", d: "Score 28 proteins the model has never seen." },
+    ],
+  },
+];
+
+export function HandOverview() {
+  let n = 0;
+  return (
+    <Figure label="The pipeline in five steps: graph, encoder, pretrain, fine-tune, test">
+      <div className="hd ho">
+        <div className="ho-groups">
+          {OVERVIEW.map(g => (
+            <div key={g.label} className="ho-group" style={{ flexGrow: g.steps.length }}>
+              <p className="ho-label">
+                {g.label}
+                <svg viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+                  <path className="st" d="M2 5 Q50 8 100 5 T198 5" stroke="var(--hd-orange)" strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+                </svg>
+              </p>
+              <ol className="ho-steps">
+                {g.steps.map(s => {
+                  n += 1;
+                  return (
+                    <li key={s.t} className="ho-step">
+                      <span className="ho-n">{n}</span>
+                      <b>{s.t}</b>
+                      <span>{s.d}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ))}
+        </div>
+        <p className="ho-foot">In step 3 I compare three ways to learn, with three random seeds each, all on a single A100.</p>
+      </div>
+      <style>{STYLE + `
+        .ho { max-width: 46rem; margin: 0 auto; padding: 0 0.3rem; font-family: "Caveat", var(--font-ui), cursive; }
+        .ho-groups { display: flex; gap: 2rem; align-items: stretch; }
+        .ho-group { flex-basis: 0; min-width: 0; }
+        .ho-label { margin: 0 0 0.9rem; font-size: 1.3rem; line-height: 1.1; color: var(--fig-note); }
+        .hd .ho-label svg { display: block; width: 100%; height: 0.5rem; margin-top: 0.15rem; overflow: visible; }
+        .ho-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 1rem; }
+        .ho-step { display: flex; flex-direction: column; gap: 0.15rem; padding: 0 !important; margin: 0 !important; }
+        .ho-step::marker { content: none; }
+        .ho-n { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border: 2.5px solid var(--hd-orange); border-radius: 52% 48% 55% 45% / 48% 55% 45% 52%; font-size: 1.35rem; font-weight: 700; color: var(--hd-orange); margin-bottom: 0.25rem; }
+        .ho-step b { font-size: 1.5rem; line-height: 1.1; }
+        .ho-step > span:not(.ho-n) { font-size: 1.15rem; line-height: 1.2; color: var(--fig-note); }
+        .ho-foot { font-size: 1.1rem; color: var(--fig-note); margin: 1.1rem 0 0; text-align: center; }
+        @media (max-width: 720px) {
+          .ho-groups { flex-direction: column; gap: 1.3rem; }
+          .ho-steps { grid-auto-flow: row; gap: 1rem; }
+          .ho-step { padding-left: 3rem !important; position: relative; min-height: 2.4rem; }
+          .ho-n { position: absolute; left: 0; top: 0; margin: 0; }
+        }
+      `}</style>
+    </Figure>
+  );
+}

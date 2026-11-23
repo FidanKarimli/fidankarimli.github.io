@@ -18,12 +18,12 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
         aria-label="Contents"
         class="toc absolute top-0 right-full me-10 hidden h-full w-52 xl:block"
       >
-        <nav class="sticky top-24">
+        <nav class="toc-nav sticky top-24">
           <p class="font-ui mb-2 text-xs tracking-widest uppercase">Contents</p>
-          <ol class="space-y-1.5 text-sm leading-snug">
+          <ol class="text-sm leading-snug">
             {items.map(h => (
-              <li class:list={{ "ps-3": h.depth === 3 }}>
-                <a href={`#${h.slug}`} data-toc-link={h.slug}>
+              <li>
+                <a href={`#${h.slug}`} data-toc-link={h.slug} data-depth={h.depth}>
                   {h.text}
                 </a>
               </li>
@@ -91,11 +91,26 @@ const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
   .toc:focus-within {
     opacity: 1;
   }
+  /* Taller lists scroll inside the panel instead of running off the screen. */
+  .toc-nav {
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  /* Every entry has the same marker column on the left. Sub-sections are indented by padding,
+     so the active bar always lines up and wrapped lines hang under their own text. */
+  .toc ol {
+    margin-inline-start: -0.75rem;
+  }
   .toc a {
     display: block;
     border-inline-start: 2px solid transparent;
-    margin-inline-start: -0.75rem;
+    padding-block: 0.22rem;
     padding-inline-start: calc(0.75rem - 2px);
+  }
+  .toc a[data-depth="3"] {
+    padding-inline-start: calc(1.6rem - 2px);
+    font-size: 0.93em;
   }
   .toc a:hover {
     color: var(--accent);

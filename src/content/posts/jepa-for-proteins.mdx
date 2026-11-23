@@ -14,7 +14,7 @@ import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
 import TerminalReplay from '@/components/jepa/TerminalReplay.tsx';
-import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore, HandTargets, HandPipeline, HandFold } from '@/components/jepa/HandDrawn.tsx';
+import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore, HandTargets, HandPipeline, HandFold, HandOverview } from '@/components/jepa/HandDrawn.tsx';
 import StructureStory from '@/components/jepa/StructureStory.tsx';
 import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
 import MutationDrawing from '@/components/jepa/MutationDrawing.tsx';
@@ -27,7 +27,7 @@ The best thing I took from it was breadth. I saw so many sides of how AI is used
 
 I had excellent lectures on this topic, and afterwards I learned a lot more through self-study materials.
 
-The plan: first the biology (proteins, stability, ΔΔG), then our first attempt at Petnica, how I turn a protein into a graph, the experiment, and four results. I'm not a biologist either, and you don't need to be one to follow this. 🙂
+The plan: first the biology (proteins, stability, ΔΔG), then the whole pipeline in one picture, and then each step in order, followed by four results. I'm not a biologist either, and you don't need to be one to follow this. 🙂
 
 ## What is a protein?
 
@@ -102,6 +102,12 @@ A mutation such as E15Q is written in three pieces: the original amino acid (E, 
 
 That gives us the task for the rest of the post: <Highlight text="given a protein's 3D structure and one mutation, predict ΔΔG." client:visible /> The letters alone are not enough. The model also has to know where position 15 sits in the folded protein and what surrounds it.
 
+## Our pipeline at a glance
+
+Before the details, here is the whole experiment in one picture. Everything after this explains one step, in order.
+
+<HandOverview client:visible />
+
 ## Our first attempt at Petnica
 
 I had worked on this before. At the Petnica Summer Institute, my teammate Pau Martínez and I built a small version of the same pipeline:
@@ -121,7 +127,7 @@ That is usually when you start looking for a bug. We had some, but this behaviou
 
 A few months later I came back to them with a cleaner design that changes just one thing: <Highlight text="what the model is asked to predict" client:visible />. The answer was less flattering to my intuition than I expected.
 
-## From a protein to a graph
+## Step 1: From a protein to a graph
 
 One of my lecturers explained it like this. Take a sequence and look at the first and the fifth amino acids. Along the chain they are far apart, and nothing in the sequence says they have anything to do with each other.
 
@@ -137,11 +143,11 @@ A sequence can't show that. A graph can: each amino acid becomes a node, and we 
 
 In the real data, each node sits at the residue's Cα atom and is joined to its 16 nearest neighbours in 3D. About 62% of the edges join residues more than four steps apart in the chain: contacts created by folding. Node features are backbone angles, and edge features are distances and sequence separation. No feature reveals which amino acid a residue is. That rule matters later, because otherwise a model could read the answer instead of predicting it.
 
-### The encoder: a graph neural network
+## Step 2: The encoder, a graph neural network
 
 The encoder is a graph neural network with four GINE layers and 128 dimensions. GINE is the GIN layer ([Xu et al., 2019](https://arxiv.org/abs/1810.00826)) extended to use edge features ([Hu et al., 2020](https://arxiv.org/abs/1905.12265)). In every layer, each residue collects <HoverCard label="messages" title="Message passing" body="Each node sends its current vector, combined with the edge features, to its neighbours. Every node then sums what it receives and updates its own vector." client:visible /> from its neighbours and updates its own vector. After four layers, a residue knows about everything within four hops of it. The output is one 128-number <HoverCard label="embedding" title="Embedding" body="A list of numbers describing a residue and its surroundings. Residues in similar situations get similar lists." client:visible /> per residue.
 
-## Learning without labels: the idea
+## Step 3: Learning without labels
 
 Stability labels are expensive. MegaScale is the largest set I know of, and it still covers only 298 small proteins (271,231 mutations). Structures are far more abundant: AlphaFold DB ([Varadi et al., 2022](https://doi.org/10.1093/nar/gkab1061)) and newer predictors such as [Chai-1](https://doi.org/10.1101/2024.10.10.615955) keep making more.
 
@@ -149,7 +155,7 @@ Stability labels are expensive. MegaScale is the largest set I know of, and it s
 
 That is <Highlight text="self-supervised learning" type="underline" client:visible />: invent a task whose answer is already inside the data. Here, we hide the identity of 20% of the residues and ask the network to predict what was hidden. The open question is what exactly it should predict.
 
-## What should the model predict?
+## Does it matter what you predict?
 
 There are two options.
 
@@ -187,13 +193,11 @@ I trained four versions of the same graph neural network:
 - C, Letter: predict the hidden amino acid.
 - D, Both: letter loss plus 0.45 × vector loss.
 
-The graph, encoder, masking rate, optimiser, pretraining data and seeds were identical. The pretrained encoders were then <HoverCard label="frozen" title="Frozen encoder" body="The pretrained weights are not updated afterwards. Only a small head on top learns to predict ΔΔG, so the score reflects what pretraining put into the encoder." client:visible /> for the stability task. The baseline has nothing to freeze, so it trains end to end.
+The graph, encoder, masking rate, optimiser, pretraining data and seeds were identical.
 
-### How the experiment runs
+## Steps 4 and 5: Fine-tune and test
 
-Each version goes through the same four steps:
-
-<HandPipeline client:visible />
+Each version then goes through the same last two steps. The pretrained encoders are <HoverCard label="frozen" title="Frozen encoder" body="The pretrained weights are not updated afterwards. Only a small head on top learns to predict ΔΔG, so the score reflects what pretraining put into the encoder." client:visible />, and only a small head on top learns ΔΔG from about 215,000 labelled mutations. The baseline has nothing to freeze, so it trains end to end. Then every model is scored on 28 proteins it has never seen.
 
 If one objective produced better features, this setup should show it.
 

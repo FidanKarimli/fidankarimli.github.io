@@ -29,6 +29,7 @@
     "dayjs": "^1.11.23",
     "katex": "^0.16.47",
     "lodash.kebabcase": "^4.1.1",
+    "motion": "^14.14.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "rehype-callouts": "^2.2.0",
