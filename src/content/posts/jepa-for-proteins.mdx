@@ -14,7 +14,7 @@ import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
 import TerminalReplay from '@/components/jepa/TerminalReplay.tsx';
-import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore, HandTargets, HandPipeline } from '@/components/jepa/HandDrawn.tsx';
+import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore, HandTargets, HandPipeline, HandFold } from '@/components/jepa/HandDrawn.tsx';
 import StructureStory from '@/components/jepa/StructureStory.tsx';
 import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
 import MutationDrawing from '@/components/jepa/MutationDrawing.tsx';
@@ -27,7 +27,7 @@ The best thing I took from it was breadth. I saw so many sides of how AI is used
 
 I had excellent lectures on this topic, and afterwards I learned a lot more through self-study materials.
 
-The plan: first the biology (proteins, stability, ΔΔG), then how I turn a protein into a graph, then the experiment and what surprised me. I'm not a biologist either, and you don't need to be one to follow this. 🙂
+The plan: first the biology (proteins, stability, ΔΔG), then our first attempt at Petnica, how I turn a protein into a graph, the experiment, and four results. I'm not a biologist either, and you don't need to be one to follow this. 🙂
 
 ## What is a protein?
 
@@ -102,32 +102,46 @@ A mutation such as E15Q is written in three pieces: the original amino acid (E, 
 
 That gives us the task for the rest of the post: <Highlight text="given a protein's 3D structure and one mutation, predict ΔΔG." client:visible /> The letters alone are not enough. The model also has to know where position 15 sits in the folded protein and what surrounds it.
 
-## Why I came back to this
+## Our first attempt at Petnica
 
-I had worked on this before. At Petnica, my teammate Pau Martínez and I trained a graph neural network on proteins, and one experiment did something strange: the training loss went <Highlight text="up" client:visible />.
+I had worked on this before. At the Petnica Summer Institute, my teammate Pau Martínez and I built a small version of the same pipeline:
 
-That is usually when you start looking for a bug. We had some, but this behaviour was real. We finished with two questions we couldn't answer:
+1. **Pretrain without labels.** We trained a graph neural network on unlabelled protein structures with Graph-JEPA. We hid parts of each protein graph and asked the network to predict the embeddings of the hidden parts.
+2. **Fine-tune on mutations.** We then trained it to predict ΔΔG, and compared it with the same network trained from scratch.
+
+It worked: pretraining raised the <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> from 0.548 to 0.600. But two things looked wrong, and we couldn't explain them:
+
+- The embeddings looked partly collapsed: many residues ended up with almost the same vector (an effective rank of 5 to 8 out of 128, a measure I'll explain later).
+- The JEPA loss went <Highlight text="up" client:visible /> during training instead of down.
+
+That is usually when you start looking for a bug. We had some, but this behaviour was real. We finished with two questions:
 
 1. Why was the loss increasing?
 2. How can we tell whether the model learned something meaningful about proteins?
 
-A few months later I came back to them and changed just one thing: <Highlight text="what the model is asked to predict" client:visible />. The answer was less flattering to my intuition than I expected.
+A few months later I came back to them with a cleaner design that changes just one thing: <Highlight text="what the model is asked to predict" client:visible />. The answer was less flattering to my intuition than I expected.
 
 ## From a protein to a graph
 
-A protein is a chain, but its interactions happen in 3D. Two residues far apart along the chain can end up touching after folding, and a mutation in one can disturb the other. A model that reads only the sequence cannot see that. A graph can.
+One of my lecturers explained it like this. Take a sequence and look at the first and the fifth amino acids. Along the chain they are far apart, and nothing in the sequence says they have anything to do with each other.
 
-A graph is a set of nodes joined by edges. Here, each residue is a node, and an edge joins two residues that are close in the folded structure. (I'm writing up what I learned about graphs in a separate post, and I'll link it here.)
+But the protein folds. In 3D, the first and the fifth end up right next to each other, and <Highlight text="what sits next to what is what matters, because neighbours interact." client:visible />
+
+A sequence can't show that. A graph can: each amino acid becomes a node, and we draw an edge between amino acids that touch.
+
+<HandFold client:visible />
+
+(New to graphs? I wrote a [short note on the basics](/posts/graph-neural-networks-basics/).) Here is a whole, made-up protein as a graph:
 
 <HandGraph client:visible />
 
 In the real data, each node sits at the residue's Cα atom and is joined to its 16 nearest neighbours in 3D. About 62% of the edges join residues more than four steps apart in the chain: contacts created by folding. Node features are backbone angles, and edge features are distances and sequence separation. No feature reveals which amino acid a residue is. That rule matters later, because otherwise a model could read the answer instead of predicting it.
 
-### The encoder
+### The encoder: a graph neural network
 
 The encoder is a graph neural network with four GINE layers and 128 dimensions. GINE is the GIN layer ([Xu et al., 2019](https://arxiv.org/abs/1810.00826)) extended to use edge features ([Hu et al., 2020](https://arxiv.org/abs/1905.12265)). In every layer, each residue collects <HoverCard label="messages" title="Message passing" body="Each node sends its current vector, combined with the edge features, to its neighbours. Every node then sums what it receives and updates its own vector." client:visible /> from its neighbours and updates its own vector. After four layers, a residue knows about everything within four hops of it. The output is one 128-number <HoverCard label="embedding" title="Embedding" body="A list of numbers describing a residue and its surroundings. Residues in similar situations get similar lists." client:visible /> per residue.
 
-## Learning without labels
+## Learning without labels: the idea
 
 Stability labels are expensive. MegaScale is the largest set I know of, and it still covers only 298 small proteins (271,231 mutations). Structures are far more abundant: AlphaFold DB ([Varadi et al., 2022](https://doi.org/10.1093/nar/gkab1061)) and newer predictors such as [Chai-1](https://doi.org/10.1101/2024.10.10.615955) keep making more.
 
@@ -135,13 +149,17 @@ Stability labels are expensive. MegaScale is the largest set I know of, and it s
 
 That is <Highlight text="self-supervised learning" type="underline" client:visible />: invent a task whose answer is already inside the data. Here, we hide the identity of 20% of the residues and ask the network to predict what was hidden. The open question is what exactly it should predict.
 
-## A letter or a vector?
+## What should the model predict?
 
 There are two options.
 
-**The letter.** Predict which of the 20 amino acids was hidden. This is a 20-way classification, the same idea as masked language modelling. It is also close to how ProteinMPNN ([Dauparas et al., 2022](https://doi.org/10.1126/science.add2187)) is trained: recover the amino acid at each position from the backbone.
+### Option 1: a letter
 
-**The vector.** Don't predict a letter at all. Predict the embedding that a second network, the teacher, gives to the hidden residue. This is a Joint-Embedding Predictive Architecture, or JEPA ([LeCun, 2022](https://openreview.net/forum?id=BZ5a1r-kVsf); [Assran et al., 2023](https://arxiv.org/abs/2301.08243)), and Graph-JEPA ([Skenderi et al., 2023](https://arxiv.org/abs/2309.16014)) brings it to graphs.
+Predict which of the 20 amino acids was hidden. This is a 20-way classification, the same idea as masked language modelling. It is also close to how ProteinMPNN ([Dauparas et al., 2022](https://doi.org/10.1126/science.add2187)) is trained: recover the amino acid at each position from the backbone.
+
+### Option 2: a vector (JEPA)
+
+Don't predict a letter at all. Predict the embedding that a second network, the teacher, gives to the hidden residue. This is a Joint-Embedding Predictive Architecture, or JEPA ([LeCun, 2022](https://openreview.net/forum?id=BZ5a1r-kVsf); [Assran et al., 2023](https://arxiv.org/abs/2301.08243)), and Graph-JEPA ([Skenderi et al., 2023](https://arxiv.org/abs/2309.16014)) brings it to graphs.
 
 How the JEPA version works here:
 
@@ -149,13 +167,18 @@ How the JEPA version works here:
 - The teacher sees the full graph and produces the target embedding. Its weights are an <HoverCard label="EMA" title="Exponential moving average" body="The teacher is not trained directly. Its weights are a slow-moving average of the student's, so it changes gradually instead of chasing every step." client:visible /> of the student's, and it gets no gradient.
 - The loss is 1 − <HoverCard label="cosine similarity" title="Cosine similarity" body="Whether two vectors point in the same direction, ignoring their length. 1 means the same direction, 0 means unrelated." client:visible /> between the prediction and the target.
 
+<div class="photo-wide photo-adapt">
+  <img class="light-version" src="/images/jepa-diagram.png" alt="JEPA diagram: a context encoder sees the masked input and a predictor tries to match the embedding that an EMA target encoder gives the full input; a stop-gradient on the target side feeds the loss" width="1200" height="637" loading="lazy" decoding="async" />
+  <img class="dark-version" src="/images/jepa-diagram-dark.png" alt="JEPA diagram: a context encoder sees the masked input and a predictor tries to match the embedding that an EMA target encoder gives the full input; a stop-gradient on the target side feeds the loss" width="1200" height="637" loading="lazy" decoding="async" />
+</div>
+
 The appeal is that the network doesn't have to reconstruct every detail. It can predict something more abstract. The risk is <HoverCard label="collapse" title="Collapse" body="Every input ends up with almost the same embedding. The prediction task becomes trivial, but nothing useful is learned." client:visible />: if all targets look alike, predicting them is easy. The slow teacher and the missing gradient are there to prevent that, as in BYOL ([Grill et al., 2020](https://arxiv.org/abs/2006.07733)).
 
 <HandTargets client:visible />
 
 Solving a clever pretraining task is not the same as learning features for the problem you care about. I wanted to see whether that difference matters here.
 
-### The four versions
+### The four versions I compared
 
 I trained four versions of the same graph neural network:
 
@@ -166,11 +189,15 @@ I trained four versions of the same graph neural network:
 
 The graph, encoder, masking rate, optimiser, pretraining data and seeds were identical. The pretrained encoders were then <HoverCard label="frozen" title="Frozen encoder" body="The pretrained weights are not updated afterwards. Only a small head on top learns to predict ΔΔG, so the score reflects what pretraining put into the encoder." client:visible /> for the stability task. The baseline has nothing to freeze, so it trains end to end.
 
+### How the experiment runs
+
+Each version goes through the same four steps:
+
 <HandPipeline client:visible />
 
 If one objective produced better features, this setup should show it.
 
-## The result I didn't want to ignore
+## Result 1: the letter wins, the vector hurts
 
 I pretrained on 11,566 experimentally determined domains from SCOPe ([Chandonia et al., 2022](https://doi.org/10.1093/nar/gkab1054)) and fine-tuned on MegaScale. The test proteins were held out and split by sequence identity, so none of them resembles anything in training.
 
@@ -190,7 +217,7 @@ For context, ThermoMPNN ([Dieckhaus et al., 2024](https://doi.org/10.1073/pnas.2
 
 Then the standard diagnostic made the story stranger.
 
-## The representation looked better. It wasn't.
+## Result 2: a higher rank, a worse model
 
 A common label-free check for a representation is its <HoverCard label="effective rank" title="Effective rank" body="A smooth count of how many directions of the embedding space are really used. If all vectors point the same way it is near 1; if all 128 directions are used equally it is 128. (Roy and Vetterli, 2007)" client:visible />. RankMe ([Garrido et al., 2023](https://arxiv.org/abs/2210.02885)) found that a higher rank tends to go with better downstream performance. A low rank is a warning sign for collapse.
 
@@ -202,7 +229,7 @@ And yet the model with the higher rank was much worse at predicting stability. T
 
 A high rank doesn't guarantee a good representation. It describes geometry, not whether the information a task needs is in there. <Highlight text="A representation can use more dimensions without being more useful." client:visible /> The model was learning something, but my diagnostic couldn't tell me whether it was the right something.
 
-## The mystery of the increasing loss
+## Result 3: why the loss went up
 
 Remember the loss that kept rising in our Petnica project? The rank measurements explain it.
 
@@ -216,7 +243,7 @@ Then the representation spread out again. The slowly updated teacher kept changi
 
 Two problems that looked separate were one. <Highlight text="The loss was rising because the model was escaping collapse." client:visible /> And escaping collapse did not mean it had learned features useful for stability. When the target itself is moving, a training-loss curve doesn't tell the story you expect.
 
-## What if we just give it more data?
+## Result 4: more data, same ordering
 
 Perhaps JEPA simply needed more proteins. I repeated the pretrained runs on <CountingNumber number={26057} client:visible /> predicted structures from AlphaFold DB, more than twice the size of SCOPe. The Protein Workshop benchmark ([Jamasb et al., 2024](https://arxiv.org/abs/2406.13826)) studies structure pretraining at a larger scale, and AlphaFold structures are a natural corpus for it.
 
@@ -279,6 +306,7 @@ Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/gr
 
 - Rotating molecule (6-aminopenicillanic acid): Kiantsu, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:6-Aminopenicillanic_acid_%286-APA%29.gif). Background made transparent.
 - Amino acid structure figure: Brian Lindshield, Kansas State University Human Nutrition Flexbook, CC BY, via [SUNY Nutrition on Lumen Learning](https://courses.lumenlearning.com/suny-nutrition/chapter/2-21-amino-acids/).
+- JEPA diagram: Meta AI (the V-JEPA architecture figure), shown here for the general idea; images in the example are from that figure.
 - More pictures of protein structure: [StudyMind, an illustrated introduction](https://studymind.co.uk/notes/proteins-and-amino-acids-an-introduction/).
 
 </div>

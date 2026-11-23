@@ -6,6 +6,8 @@
     @apply prose;
     font-size: 1.125rem;
     line-height: 1.7;
+    /* Hand-drawn underlines can poke a pixel or two past the column on phones. */
+    overflow-x: clip;
 
     h1,
     h2,
@@ -91,6 +93,12 @@
     /* A bit wider, for diagrams with small text. Tap an image to enlarge it. */
     .photo-medium img {
       max-width: min(100%, 28rem);
+      height: auto;
+    }
+
+    /* Wide diagrams, close to the full text width. */
+    .photo-wide img {
+      max-width: min(100%, 40rem);
       height: auto;
     }
 

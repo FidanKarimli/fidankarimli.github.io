@@ -655,3 +655,97 @@ export function HandPipeline() {
     </Figure>
   );
 }
+
+/* ---------------- How far a node "sees" after k layers ---------------- */
+const HOP_NODES: [number, number][] = [[100, 88], [56, 52], [146, 48], [58, 128], [146, 130], [20, 22], [182, 20], [22, 156], [182, 158]];
+const HOP_EDGES: [number, number][] = [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [2, 6], [3, 7], [4, 8]];
+const HOP_DIST = [0, 1, 1, 1, 1, 2, 2, 2, 2];
+const HOP_PANELS = [
+  { k: 0, t: "no layers", d: "knows only itself" },
+  { k: 1, t: "1 layer", d: "knows its neighbours" },
+  { k: 2, t: "2 layers", d: "and their neighbours" },
+];
+
+export function HandHops() {
+  return (
+    <Figure label="With each message-passing layer a node learns about neighbours one step further away">
+      <div className="hd hh">
+        <div className="hh-grid">
+          {HOP_PANELS.map(p => (
+            <svg key={p.k} viewBox="0 0 204 226" role="img" aria-label={`${p.t}: the centre node ${p.d}`}>
+              <defs>
+                <filter id={`hd-wob-i${p.k}`} filterUnits="userSpaceOnUse" x="-10" y="-10" width="230" height="240">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed={3 + p.k} result="n" />
+                  <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" />
+                </filter>
+              </defs>
+              {HOP_EDGES.map(([a, b]) => (
+                <path key={`${a}${b}`} className="st" d={line(HOP_NODES[a][0], HOP_NODES[a][1], HOP_NODES[b][0], HOP_NODES[b][1])} stroke="var(--hd-ink)" strokeWidth={1.8} strokeOpacity={0.4} filter={`url(#hd-wob-i${p.k})`} />
+              ))}
+              {HOP_NODES.map(([x, y], i) => {
+                const on = HOP_DIST[i] <= p.k;
+                return <circle key={i} cx={x} cy={y} r={i === 0 ? 15 : 12} fill={on ? "var(--hd-orange)" : "var(--background)"} fillOpacity={i === 0 ? 0.95 : on ? 0.4 : 1} stroke={on ? "var(--hd-orange)" : "var(--hd-ink)"} strokeOpacity={on ? 1 : 0.5} strokeWidth={i === 0 ? 3 : 2.2} filter={`url(#hd-wob-i${p.k})`} />;
+              })}
+              <text className="t tb" x={102} y={198} textAnchor="middle" style={{ fontSize: 24 }}>{p.t}</text>
+              <text className="t ts" x={102} y={220} textAnchor="middle" style={{ fontSize: 19 }}>{p.d}</text>
+            </svg>
+          ))}
+        </div>
+      </div>
+      <style>{STYLE + `
+        .hh { max-width: 44rem; margin: 0 auto; }
+        .hh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+        .hh-grid svg { max-width: 14rem; margin: 0 auto; }
+        @media (max-width: 560px) { .hh-grid { grid-template-columns: 1fr; } .hh-grid svg { max-width: 12rem; } }
+      `}</style>
+    </Figure>
+  );
+}
+
+/* ---------------- Far apart in the chain, next to each other in 3D ---------------- */
+const FOLD_PTS: [number, number][] = [[300, 262], [300, 312], [335, 347], [370, 312], [370, 262], [405, 227], [450, 227], [482, 257]];
+
+export function HandFold() {
+  const bead = (i: number, x: number, y: number) => {
+    const hot = i === 0 || i === 4;
+    return (
+      <g key={i}>
+        <circle cx={x} cy={y} r={19} fill={hot ? "var(--hd-orange)" : "var(--background)"} fillOpacity={hot ? 0.5 : 1} stroke={hot ? "var(--hd-orange)" : "var(--hd-ink)"} strokeOpacity={hot ? 1 : 0.6} strokeWidth={hot ? 3 : 2.2} filter="url(#hd-wob-j)" />
+        <text className="t tb" x={x} y={y + 8} textAnchor="middle" style={{ fontSize: 24 }}>{i + 1}</text>
+      </g>
+    );
+  };
+  return (
+    <Figure label="Amino acids 1 and 5 are far apart along the chain, but after folding they sit right next to each other">
+      <div className="hd hr">
+        <svg viewBox="0 0 720 392" role="img" aria-label="Top: a chain of eight amino acids in a row, with the first and fifth four steps apart. Bottom: the same chain folded, where the first and fifth sit side by side and touch.">
+          <defs>
+            <filter id="hd-wob-j" filterUnits="userSpaceOnUse" x="-20" y="-20" width="760" height="420">
+              <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="31" result="n" />
+              <feDisplacementMap in="SourceGraphic" in2="n" scale="2.8" />
+            </filter>
+          </defs>
+          <text className="t ts" x={360} y={24} textAnchor="middle" style={{ fontSize: 22 }}>in the sequence</text>
+          <path className="st" d={line(70, 68, 700, 68)} stroke="var(--hd-ink)" strokeOpacity={0.45} strokeWidth={2.2} filter="url(#hd-wob-j)" />
+          {Array.from({ length: 8 }, (_, i) => bead(i, 70 + i * 90, 68))}
+          <path className="st" d="M70 94 Q250 140 430 94" stroke="var(--hd-orange)" strokeWidth={2.6} strokeDasharray="2 7" filter="url(#hd-wob-j)" />
+          <text className="t tb" x={250} y={140} textAnchor="middle" style={{ fontSize: 24, fill: "var(--hd-orange)" }}>far apart</text>
+
+          <path className="st" d="M360 168 Q364 190 360 206" stroke="var(--hd-soft)" strokeWidth={2.4} filter="url(#hd-wob-j)" />
+          <path className="st" d="M351 197 L360 207 L369 197" stroke="var(--hd-soft)" strokeWidth={2.4} />
+          <text className="t ts" x={384} y={192} style={{ fontSize: 22 }}>it folds</text>
+
+          <path className="st" d="M300 262 L300 312 Q300 347 335 347 Q370 347 370 312 L370 262 L405 227 L450 227 L482 257" stroke="var(--hd-ink)" strokeOpacity={0.45} strokeWidth={2.2} filter="url(#hd-wob-j)" />
+          <path className="st" d="M322 262 L348 262" stroke="var(--hd-orange)" strokeWidth={3.2} filter="url(#hd-wob-j)" />
+          {FOLD_PTS.map(([x, y], i) => bead(i, x, y))}
+          <text className="t tb" x={268} y={270} textAnchor="end" style={{ fontSize: 24, fill: "var(--hd-orange)" }}>right next</text>
+          <text className="t tb" x={268} y={294} textAnchor="end" style={{ fontSize: 24, fill: "var(--hd-orange)" }}>to each other</text>
+          <text className="t ts" x={360} y={384} textAnchor="middle" style={{ fontSize: 22 }}>after folding</text>
+        </svg>
+      </div>
+      <style>{STYLE + `
+        .hd.hr svg { max-width: 40rem; margin: 0 auto; }
+      `}</style>
+    </Figure>
+  );
+}

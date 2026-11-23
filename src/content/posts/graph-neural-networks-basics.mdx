@@ -1,0 +1,106 @@
+---
+title: 'Graphs and Graph Neural Networks, the Basics'
+description: 'What a graph is, why so much data is a graph, and how a graph neural network learns from it. The short version I wish I had.'
+pubDatetime: 2026-10-28T00:00:00Z
+cover: '../../assets/covers/graph-gnn.png'
+subtitle: 'Nodes, edges and asking your neighbours'
+tags: ['gnn', 'graphs', 'basics']
+---
+
+import Highlight from '@/components/Highlight.tsx';
+import HoverCard from '@/components/HoverCard.tsx';
+import { HandHops } from '@/components/jepa/HandDrawn.tsx';
+
+I learned about graphs at the PSI:ML summer school, and I loved the idea straight away. This is a short note on what I understood, written for someone starting from zero. It is the background for my [protein stability post](/posts/jepa-for-proteins/), so I'll keep it light.
+
+## What is a graph?
+
+A graph is a set of **nodes** and the **edges** that connect them. That's all.
+
+Friends on a social network are a graph: people are nodes, friendships are edges. A molecule is a graph: atoms are nodes, bonds are edges. A map is a graph too: cities and the roads between them.
+
+What matters is that the data is about <Highlight text="things and how they are connected" client:visible />. An image is a neat grid and a sentence is a neat line, but a molecule is neither. Squeezing it into a grid or a line throws away the part that matters, which is who is connected to whom. Each node can carry numbers (an atom's type, a person's age), and so can each edge (a bond length, how long two people have been friends).
+
+<div class="photo-wide photo-light">
+  <img src="/images/graphs-everywhere.png" alt="Examples of data that are graphs: molecules, knowledge, information, brain and neurons, genes, communication, software and social networks" width="1658" height="1000" loading="lazy" decoding="async" />
+</div>
+
+## Graphs are not new
+
+It is easy to think graphs arrived with deep learning. They didn't. <Highlight text="They have been the natural form of connected data for almost 300 years." client:visible />
+
+- **1736.** Euler solves the Seven Bridges of Königsberg puzzle by thinking only about which landmasses are joined by bridges. It is usually called the first theorem of graph theory ([Britannica](https://www.britannica.com/science/graph-theory)).
+- **The 19th century.** The word "graph" is credited to James Sylvester, who used it for diagrams of molecules, so chemistry and graphs have been linked from the start.
+- **1936.** Dénes Kőnig publishes the first textbook on the subject ([Biggs, Lloyd and Wilson](https://www.wikiwand.com/en/Graph_Theory,_1736%E2%80%931936) tell this history).
+- **Late 1990s.** Google's PageRank ranks web pages by treating the web as a graph of links.
+- **2009.** Scarselli et al. propose the first model called a graph neural network ([paper](https://papers.baulab.info/papers/Scarselli-2009.pdf)).
+- **2017.** Gilmer et al. frame it as message passing, and Kipf and Welling publish the graph convolutional network. Modern GNNs start here.
+
+So the new part is not graphs. It is that we can now <Highlight text="learn from them with neural networks" client:visible />.
+
+## Most recommender systems are graphs
+
+Think of Netflix, YouTube or an online shop. Users and items are nodes. A click, a purchase or a rating is an edge. Add friendships between users, and facts about the items (brand, colour, category), and you get a big graph with several kinds of edges, like the picture below, where each person is a node and each dotted line is a connection.
+
+<div class="photo-wide">
+  <img src="/images/social-network-banner.png" alt="People spread across a world map, each drawn as a node, joined by dotted lines that show who is connected to whom" width="1000" height="500" loading="lazy" decoding="async" />
+</div>
+
+Predicting what a user will like becomes a question about the graph: is there an edge missing between this user and that item? That is why most modern recommenders use graph methods. Pinterest runs a graph network (PinSage) on a graph with 3 billion nodes and 18 billion edges, and recent surveys describe GNNs as the new state of the art for recommendation ([Wu et al., 2022](https://arxiv.org/abs/2011.02260); [Gao et al., 2021](https://arxiv.org/abs/2109.12843)). It is also the area I do research in at Istanbul Technical University.
+
+## What a graph neural network does
+
+A graph neural network (GNN) learns a vector for every node, a short list of numbers that describes the node and its surroundings. It does this by repeating one simple idea: <Highlight text="ask your neighbours" client:visible />.
+
+In one layer:
+
+1. Every node sends its current vector to its neighbours. These are the <HoverCard label="messages" title="Message passing" body="Each node sends its vector, together with any edge information, to the nodes it is connected to. The name comes from Gilmer et al. (2017)." client:visible />.
+2. Every node adds up the messages it receives. The sum doesn't depend on the order, which matters because graphs have no natural order.
+3. Every node updates its own vector from what it received and what it already knew, using a small neural network.
+
+Then you stack layers. After one layer a node knows about its direct neighbours. After two, about its neighbours' neighbours, and so on. The number of layers decides how far a node can "see".
+
+<HandHops client:visible />
+
+That's most of it. Different GNNs (GCN, GAT, GIN and others) mostly differ in how they do steps 2 and 3.
+
+## What can you predict?
+
+Once every node has a vector, you can ask three kinds of questions:
+
+- **About a node:** what kind of user is this? Which atom is this?
+- **About an edge:** will this user like this item? Do these two residues touch?
+- **About the whole graph:** is this molecule toxic? You combine all node vectors into one and predict from it.
+
+## Why this matters for proteins
+
+A protein is a chain of amino acids, but it folds into a 3D shape, and residues far apart in the chain can end up right next to each other. If we make each residue a node and join the ones that touch, the graph captures exactly those contacts. A GNN can then learn how a residue feels about its surroundings, and that is what decides whether a mutation hurts.
+
+That is the setup in my [protein stability post](/posts/jepa-for-proteins/).
+
+## Two things that go wrong
+
+- **Too many layers.** If you keep passing messages, every node starts to look like every other node, and the useful differences blur. This is called over-smoothing. Most GNNs stay shallow for this reason (mine has four layers).
+- **Far-away information.** A node can only hear from nodes within as many hops as it has layers. Long-range effects need more layers or another trick.
+
+## Where to read more
+
+- [A Gentle Introduction to Graph Neural Networks](https://distill.pub/2021/gnn-intro/) by Sanchez-Lengeling et al. (Distill, 2021). Interactive, and the best place to start.
+- [The Graph Neural Network Model](https://papers.baulab.info/papers/Scarselli-2009.pdf) by Scarselli et al. (2009). Where the name comes from.
+- [Neural Message Passing for Quantum Chemistry](https://arxiv.org/abs/1704.01212) by Gilmer et al. (2017). The paper that framed GNN layers as message passing.
+- [Semi-Supervised Classification with Graph Convolutional Networks](https://arxiv.org/abs/1609.02907) by Kipf and Welling (2017). The classic GCN paper.
+- [How Powerful are Graph Neural Networks?](https://arxiv.org/abs/1810.00826) by Xu et al. (2019). Why the sum in step 2 is a good choice (GIN).
+- [Graph Convolutional Neural Networks for Web-Scale Recommender Systems](https://arxiv.org/abs/1806.01973) by Ying et al. (2018). PinSage at Pinterest.
+- [Graph Neural Networks in Recommender Systems: A Survey](https://arxiv.org/abs/2011.02260) by Wu et al. A good overview of the field.
+- [Graph Neural Network at Google](https://indico.cern.ch/event/1496673/contributions/6657140/attachments/3129599/5551779/%5BEXTERNAL%5D%20Graph%20Neural%20Network%20at%20Google%20--%20Fast%20Machine%20Learning%20for%20Science,%202025.pdf) by Mathieu Guillame-Bert (Fast Machine Learning for Science, 2025). Slides on how GNNs are used and scaled in practice.
+- [A practical introduction to GNNs](https://danielegrattarola.github.io/posts/2021-03-12/gnn-lecture-part-2.html) by Daniele Grattarola. Lecture notes with code.
+
+## Credits
+
+<div class="credits">
+
+- Cover figure (a node updating its state from its neighbours): slide 9 of [Graph Neural Network at Google](https://indico.cern.ch/event/1496673/contributions/6657140/attachments/3129599/5551779/%5BEXTERNAL%5D%20Graph%20Neural%20Network%20at%20Google%20--%20Fast%20Machine%20Learning%20for%20Science,%202025.pdf), Mathieu Guillame-Bert, Fast Machine Learning for Science 2025.
+- Social network picture: [Visible Network Labs](https://visiblenetworklabs.com/2023/01/06/social-network-analysis-for-foundations/).
+{/* TODO: add the credit for the graphs-in-many-fields figure once its source is confirmed. */}
+
+</div>
