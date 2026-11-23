@@ -238,7 +238,7 @@ export function HandGraph() {
     <Figure label="How a protein becomes a graph: a chain of amino acids, its folded shape, and the graph of which ones touch">
       <div className="hd hg">
         <p className="hg-title">How a protein becomes a graph</p>
-        <p className="hg-sub">Hover a letter to see who it touches.</p>
+        <p className="hg-sub">Hover a letter.</p>
 
         <svg viewBox="0 0 720 148" role="group" aria-label="The chain of 14 amino acids. Use the left and right arrow keys to pick one." onKeyDown={onKey}>
           <defs>
@@ -279,9 +279,9 @@ export function HandGraph() {
         </div>
 
         <p className="hg-read" aria-live="polite">
-          Residue {sel + 1} touches <b>{nb.length}</b> others{farOnes.length ? <>, and <b>{farOnes.length}</b> of them sit far away along the chain.</> : "."}
+          Residue {sel + 1} touches <b>{nb.length}</b> others. {farOnes.length ? <><b>{farOnes.length}</b> of them are far away in the chain.</> : "All are close in the chain."}
         </p>
-        <p className="hg-note">Each node is one amino acid. A line means they touch in 3D. (A made-up 14-letter protein, with 4 neighbours each.)</p>
+        <p className="hg-note">Each node is an amino acid. A line means they touch in 3D. A made-up protein.</p>
       </div>
       <style>{STYLE + `
         .hg { max-width: 44rem; margin: 0 auto; padding: 0 0.3rem; }
@@ -495,6 +495,162 @@ export function HandMore() {
         .hm-punch { font-family: "Caveat", var(--font-ui), cursive; font-size: 1.5rem; line-height: 1.2; text-align: center; margin: 0.4rem 0 0; }
         .hm-sub { font-family: "Caveat", var(--font-ui), cursive; font-size: 1.15rem; color: var(--fig-note); text-align: center; margin: 0; }
         .hm-note { font-size: 0.78rem; color: var(--fig-note); text-align: center; margin: 0.6rem auto 0; max-width: 32rem; line-height: 1.4; }
+      `}</style>
+    </Figure>
+  );
+}
+
+/* ---------------- What the model has to predict (letter vs vector) ---------------- */
+const MINI_LETTERS = ["L", "K", "I", "F", "D", "A"];
+const MASKED = new Set([1, 4]);
+const CELLS_PRED = [0.8, 0.3, 0.6, 0.9, 0.4, 0.7];
+const CELLS_TARGET = [0.7, 0.4, 0.55, 0.85, 0.5, 0.65];
+
+function miniGraph(cx: number, cy: number, r: number, masked: boolean, key: string) {
+  const pts = MINI_LETTERS.map((_, i) => {
+    const a = ((-90 + i * 60) * Math.PI) / 180;
+    return { x: r2(cx + r * Math.cos(a)), y: r2(cy + r * Math.sin(a)) };
+  });
+  const edges: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 3], [1, 4]];
+  return (
+    <g key={key}>
+      {edges.map(([a, b]) => <path key={`${a}${b}`} className="st" d={line(pts[a].x, pts[a].y, pts[b].x, pts[b].y)} stroke="var(--hd-ink)" strokeWidth={1.8} strokeOpacity={0.45} filter="url(#hd-wob-h)" />)}
+      {pts.map((p, i) => {
+        const hide = masked && MASKED.has(i);
+        return (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r={14} fill={hide ? "var(--hd-orange)" : "var(--background)"} fillOpacity={hide ? 0.45 : 1} stroke={hide ? "var(--hd-orange)" : "var(--hd-ink)"} strokeOpacity={hide ? 1 : 0.6} strokeWidth={2.2} strokeDasharray={hide ? "4 3" : undefined} filter="url(#hd-wob-h)" />
+            <text className="t tb" x={p.x} y={r2(p.y + 7)} textAnchor="middle" style={{ fontSize: 20 }}>{hide ? "?" : MINI_LETTERS[i]}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+const box = (x: number, y: number, w: number, h: number, title: string, key: string, sub?: string) => (
+  <g key={key}>
+    <rect x={x} y={y} width={w} height={h} rx={10} fill="var(--background)" stroke="var(--hd-ink)" strokeWidth={2.4} filter="url(#hd-wob-h)" />
+    <text className="t tb" x={r2(x + w / 2)} y={r2(y + h / 2 + (sub ? 2 : 8))} textAnchor="middle" style={{ fontSize: 24 }}>{title}</text>
+    {sub && <text className="t ts" x={r2(x + w / 2)} y={r2(y + h / 2 + 22)} textAnchor="middle" style={{ fontSize: 17 }}>{sub}</text>}
+  </g>
+);
+const arrow = (x1: number, y1: number, x2: number, y2: number, c = "var(--hd-ink)", key = "") => {
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const h = (da: number) => `${r2(x2 - 11 * Math.cos(ang + da))} ${r2(y2 - 11 * Math.sin(ang + da))}`;
+  return (
+    <g key={key}>
+      <path className="st" d={line(x1, y1, x2, y2)} stroke={c} strokeWidth={2.4} filter="url(#hd-wob-h)" />
+      <path className="st" d={`M${h(0.5)} L${r2(x2)} ${r2(y2)} L${h(-0.5)}`} stroke={c} strokeWidth={2.4} />
+    </g>
+  );
+};
+const strip = (x: number, y: number, vals: number[], c: string, key: string) => (
+  <g key={key}>
+    {vals.map((v, i) => <rect key={i} x={x + i * 20} y={y} width={20} height={28} fill={c} fillOpacity={0.15 + 0.75 * v} stroke={c} strokeWidth={1.6} />)}
+  </g>
+);
+
+export function HandTargets() {
+  return (
+    <Figure label="What the model has to predict: the hidden amino acid, or the teacher's embedding of it">
+      <div className="hd hr">
+        <p className="hr-title">Same graph, two things to predict</p>
+        <svg viewBox="0 0 740 462" role="img" aria-label="The student sees the graph with two residues hidden and passes it through a GNN encoder. Letter arm: a letter head guesses which of 20 amino acids was hidden. Vector arm: a predictor outputs a vector that must match the embedding the teacher, which sees the full graph, gives that residue.">
+          <defs>
+            <filter id="hd-wob-h" filterUnits="userSpaceOnUse" x="-20" y="-20" width="780" height="480">
+              <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="21" result="n" />
+              <feDisplacementMap in="SourceGraphic" in2="n" scale="2.8" />
+            </filter>
+          </defs>
+          {miniGraph(70, 175, 48, true, "s")}
+          <text className="t ts" x={70} y={254} textAnchor="middle" style={{ fontSize: 20 }}>masked graph</text>
+          {arrow(126, 175, 163, 175, "var(--hd-ink)", "a1")}
+          {box(165, 145, 140, 60, "GNN encoder", "enc")}
+
+          {/* letter arm */}
+          <text className="t tb" x={370} y={40} style={{ fontSize: 22, fill: "var(--hd-green)" }}>C · predict the letter</text>
+          <path className="st" d="M305 165 C340 150 335 85 366 85" stroke="var(--hd-ink)" strokeWidth={2.4} filter="url(#hd-wob-h)" />
+          {box(370, 58, 130, 54, "letter head", "lh")}
+          {arrow(502, 85, 558, 85, "var(--hd-green)", "a2")}
+          <circle cx={600} cy={85} r={30} fill="var(--hd-green)" fillOpacity={0.25} stroke="var(--hd-green)" strokeWidth={2.6} filter="url(#hd-wob-h)" />
+          <text className="t tb" x={600} y={95} textAnchor="middle" style={{ fontSize: 30 }}>K</text>
+          <text className="t ts" x={600} y={140} textAnchor="middle" style={{ fontSize: 20 }}>1 of 20 letters</text>
+
+          {/* vector arm */}
+          <text className="t tb" x={370} y={225} style={{ fontSize: 22, fill: "var(--hd-red)" }}>B · predict the vector</text>
+          <path className="st" d="M305 185 C340 200 335 265 366 265" stroke="var(--hd-ink)" strokeWidth={2.4} filter="url(#hd-wob-h)" />
+          {box(370, 240, 130, 54, "predictor", "pr")}
+          {arrow(502, 267, 552, 267, "var(--hd-red)", "a3")}
+          {strip(560, 253, CELLS_PRED, "var(--hd-red)", "sp")}
+          <text className="t ts" x={620} y={246} textAnchor="middle" style={{ fontSize: 20 }}>prediction</text>
+          {arrow(620, 288, 620, 331, "var(--hd-orange)", "a4")}
+          <path className="st" d="M611 297 L620 288 L629 297" stroke="var(--hd-orange)" strokeWidth={2.4} />
+          <text className="t tb" x={606} y={317} textAnchor="end" style={{ fontSize: 22, fill: "var(--hd-orange)" }}>match</text>
+
+          {/* teacher */}
+          {miniGraph(70, 375, 42, false, "t")}
+          <text className="t ts" x={70} y={452} textAnchor="middle" style={{ fontSize: 20 }}>full graph</text>
+          {arrow(122, 375, 163, 375, "var(--hd-ink)", "a5")}
+          {box(165, 345, 150, 60, "EMA teacher", "te")}
+          {arrow(317, 375, 552, 352, "var(--hd-ink)", "a6")}
+          <text className="t ts" x={432} y={348} textAnchor="middle" style={{ fontSize: 19 }}>no gradient</text>
+          {strip(560, 338, CELLS_TARGET, "var(--hd-blue)", "st")}
+          <text className="t ts" x={620} y={392} textAnchor="middle" style={{ fontSize: 20 }}>teacher's target</text>
+        </svg>
+        <p className="hm-sub">D uses both: letter loss + 0.45 × vector loss.</p>
+      </div>
+      <style>{STYLE + `
+        .hm-sub { font-family: "Caveat", var(--font-ui), cursive; font-size: 1.15rem; color: var(--fig-note); text-align: center; margin: 0; }
+      `}</style>
+    </Figure>
+  );
+}
+
+/* ---------------- The experiment, step by step ---------------- */
+const STEPS = [
+  { t: "Pretrain", d: "Hide 20% of the residues in 11,566 structures. No labels." },
+  { t: "Freeze", d: "Keep the pretrained encoder fixed." },
+  { t: "Fine-tune", d: "Learn ΔΔG from about 215,000 labelled mutations." },
+  { t: "Test", d: "Score 28 proteins the model has never seen." },
+];
+
+export function HandPipeline() {
+  return (
+    <Figure label="The experiment in four steps: pretrain, freeze, fine-tune, test">
+      <div className="hd hp">
+        <ol className="hp-steps">
+          {STEPS.map((s, i) => (
+            <li key={s.t} className="hp-step">
+              <span className="hp-n">{i + 1}</span>
+              <b>{s.t}</b>
+              <span>{s.d}</span>
+              {i < STEPS.length - 1 && (
+                <svg className="hp-arrow" viewBox="0 0 40 20" aria-hidden="true">
+                  <path className="st" d="M2 10 Q20 12 36 10 M29 4 L36 10 L29 16" stroke="var(--hd-soft)" strokeWidth={2.2} />
+                </svg>
+              )}
+            </li>
+          ))}
+        </ol>
+        <p className="hp-foot">Repeated for each target (letter, vector, both) and 3 random seeds, all on a single A100.</p>
+      </div>
+      <style>{STYLE + `
+        .hp { max-width: 44rem; margin: 0 auto; padding: 0 0.3rem; font-family: "Caveat", var(--font-ui), cursive; }
+        .hp-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+        .hp-step { position: relative; display: flex; flex-direction: column; gap: 0.15rem; padding: 0 !important; margin: 0 !important; }
+        .hp-step::marker { content: none; }
+        .hp-n { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border: 2.5px solid var(--hd-orange); border-radius: 52% 48% 55% 45% / 48% 55% 45% 52%; font-size: 1.35rem; font-weight: 700; color: var(--hd-orange); margin-bottom: 0.25rem; }
+        .hp-step b { font-size: 1.5rem; line-height: 1.1; }
+        .hp-step > span:not(.hp-n) { font-size: 1.15rem; line-height: 1.2; color: var(--fig-note); }
+        .hd svg.hp-arrow { position: absolute; top: 0.5rem; right: -1.3rem; width: 1.5rem; height: auto; overflow: visible; }
+        .hp-foot { font-size: 1.1rem; color: var(--fig-note); margin: 1rem 0 0; text-align: center; }
+        @media (max-width: 640px) {
+          .hp-steps { grid-template-columns: 1fr; gap: 1.1rem; }
+          .hp-step { padding-left: 3rem !important; min-height: 2.4rem; }
+          .hp-n { position: absolute; left: 0; top: 0; margin: 0; }
+          .hd svg.hp-arrow { display: none; }
+        }
       `}</style>
     </Figure>
   );

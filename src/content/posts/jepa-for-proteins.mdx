@@ -9,13 +9,12 @@ typingTitle: true
 tags: ['jepa', 'self-supervised', 'gnn', 'proteins']
 ---
 
-import PredictionGame from '@/components/jepa/PredictionGame.tsx';
 import DatasetNumbers from '@/components/jepa/DatasetNumbers.tsx';
 import CountingNumber from '@/components/CountingNumber.tsx';
 import HoverCard from '@/components/HoverCard.tsx';
 import Highlight from '@/components/Highlight.tsx';
 import TerminalReplay from '@/components/jepa/TerminalReplay.tsx';
-import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore } from '@/components/jepa/HandDrawn.tsx';
+import { HandStability, HandMutationName, HandGraph, HandResults, HandRank, HandLoss, HandMore, HandTargets, HandPipeline } from '@/components/jepa/HandDrawn.tsx';
 import StructureStory from '@/components/jepa/StructureStory.tsx';
 import PolypeptideChain from '@/components/jepa/PolypeptideChain.tsx';
 import MutationDrawing from '@/components/jepa/MutationDrawing.tsx';
@@ -28,7 +27,7 @@ The best thing I took from it was breadth. I saw so many sides of how AI is used
 
 I had excellent lectures on this topic, and afterwards I learned a lot more through self-study materials.
 
-Before the experiment, we need two ideas: what a graph is, and what a protein is. I'm not a biologist either, and you don't need to be one to follow this. 🙂
+The plan: first the biology (proteins, stability, ΔΔG), then how I turn a protein into a graph, then the experiment and what surprised me. I'm not a biologist either, and you don't need to be one to follow this. 🙂
 
 ## What is a protein?
 
@@ -79,118 +78,101 @@ Depending on where it happens and what the new amino acid brings, a mutation can
 
 ### Staying folded
 
-A folded protein isn't frozen. It keeps moving between a folded and an unfolded state, and stability is how strongly the folded state is preferred. Many weak interactions hold the fold together: water-avoiding packing, hydrogen bonds and charges. Conditions matter too, like temperature, pH and salt.
+A folded protein isn't frozen. It keeps moving between a folded and an unfolded state, and stability is how strongly the folded state is preferred. Many weak interactions hold the fold together: water-avoiding packing, hydrogen bonds and charges. Temperature, pH and salt matter too.
 
-The energy gap between the two states is called ΔG. In this project, <Highlight text="a larger ΔG means a more stable protein" client:visible />.
+The energy gap between the two states is called ΔG. In this post, <Highlight text="a larger ΔG means a more stable protein" client:visible />.
 
-### Putting a number on it
+### Scoring a mutation: ΔΔG
 
-So how do we measure what a mutation does? We compare the mutant with the original protein, called the <Highlight text="wild type" type="underline" client:visible />, and look at how much the stability changed:
+To see what a mutation does, we compare the mutant with the original protein, the <Highlight text="wild type" type="underline" client:visible />, and look at how much the stability changed:
 
 $$
 \Delta\Delta G = \Delta G_{\text{mutant}} - \Delta G_{\text{wild type}}
 $$
 
-In the data I use, ΔΔG > 0 means the mutation stabilises the protein, ΔΔG < 0 means it destabilises it, and a value near zero means it has little effect. Papers differ on this sign, so always check it before comparing datasets.
+In my data, ΔΔG > 0 means the mutation stabilises the protein, ΔΔG < 0 means it destabilises it, and near zero means little effect. Papers differ on this sign, so check it before comparing datasets.
 
 <HandStability client:visible />
 
-The measurements come from the MegaScale experiment. Many protein variants are exposed to a protease, an enzyme that cuts unfolded proteins more easily than folded ones, so the more a variant survives, the more stable it is. Comparing each mutant with its wild type then gives ΔΔG, and that number is what our model will learn to predict.
+The numbers come from MegaScale ([Tsuboyama et al., 2023](https://doi.org/10.1038/s41586-023-06328-6)). Protein variants are exposed to a protease, an enzyme that cuts unfolded proteins more easily than folded ones. The more a variant survives, the more stable it is, and comparing it with the wild type gives ΔΔG.
 
-One last bit of notation. A mutation such as E15Q is written as three pieces: the original amino acid (E, glutamate), the position (15) and the new amino acid (Q, glutamine).
+A mutation such as E15Q is written in three pieces: the original amino acid (E, glutamate), its position (15) and the new amino acid (Q, glutamine).
 
 <HandMutationName client:visible />
 
-To score a mutation like this, it is not enough to know the letters. The model also needs to know where position 15 sits in the folded protein and what surrounds it. So the task is: take a protein structure and one mutation, and <Highlight text="predict ΔΔG" client:visible />.
+That gives us the task for the rest of the post: <Highlight text="given a protein's 3D structure and one mutation, predict ΔΔG." client:visible /> The letters alone are not enough. The model also has to know where position 15 sits in the folded protein and what surrounds it.
 
-During a summer research project at Petnica, my teammate Pau and I trained a graph neural network to learn representations of proteins.
+## Why I came back to this
 
-One of our experiments did something strange.
+I had worked on this before. At Petnica, my teammate Pau Martínez and I trained a graph neural network on proteins, and one experiment did something strange: the training loss went <Highlight text="up" client:visible />.
 
-The training loss started going <Highlight text="up" client:visible />.
+That is usually when you start looking for a bug. We had some, but this behaviour was real. We finished with two questions we couldn't answer:
 
-This is usually the point where you start looking for a bug. We did have bugs to find, but this particular behaviour turned out to be more interesting. The model's representations were changing in a way we didn't fully understand, and the numbers we were using to judge them weren't telling us much about whether those representations were actually useful.
+1. Why was the loss increasing?
+2. How can we tell whether the model learned something meaningful about proteins?
 
-We finished the project with two questions I couldn't quite put away.
+A few months later I came back to them and changed just one thing: <Highlight text="what the model is asked to predict" client:visible />. The answer was less flattering to my intuition than I expected.
 
-Why was the loss increasing? And how could we tell whether the model had learned something meaningful about proteins?
+## From a protein to a graph
 
-A few months later, I came back to those questions.
+A protein is a chain, but its interactions happen in 3D. Two residues far apart along the chain can end up touching after folding, and a mutation in one can disturb the other. A model that reads only the sequence cannot see that. A graph can.
 
-This time, I wanted to change just one thing: <Highlight text="what the model was asked to predict" client:visible />.
-
-The answer was considerably less flattering to my original intuition than I'd expected.
-
-## First, what are we trying to learn?
-
-Proteins are long chains of amino acids that fold into three-dimensional structures.
-
-I like to think of them as complicated little arrangements where a change in one place can affect something surprisingly far away.
-
-Imagine replacing a single amino acid in a protein. The new one might fit comfortably into the existing structure. Or it might disrupt an interaction that was helping hold everything together.
-
-We'd like to predict how that replacement changes the protein's stability.
+A graph is a set of nodes joined by edges. Here, each residue is a node, and an edge joins two residues that are close in the folded structure. (I'm writing up what I learned about graphs in a separate post, and I'll link it here.)
 
 <HandGraph client:visible />
 
-There is experimental data for this, but obtaining it is expensive. Meanwhile, we have far more protein structures than we have corresponding stability measurements.
+In the real data, each node sits at the residue's Cα atom and is joined to its 16 nearest neighbours in 3D. About 62% of the edges join residues more than four steps apart in the chain: contacts created by folding. Node features are backbone angles, and edge features are distances and sequence separation. No feature reveals which amino acid a residue is. That rule matters later, because otherwise a model could read the answer instead of predicting it.
 
-This creates a tempting opportunity.
+### The encoder
 
-<Highlight text="What if we could teach a network something useful about protein structures before showing it any stability labels?" client:visible />
+The encoder is a graph neural network with four GINE layers and 128 dimensions. GINE is the GIN layer ([Xu et al., 2019](https://arxiv.org/abs/1810.00826)) extended to use edge features ([Hu et al., 2020](https://arxiv.org/abs/1905.12265)). In every layer, each residue collects <HoverCard label="messages" title="Message passing" body="Each node sends its current vector, combined with the edge features, to its neighbours. Every node then sums what it receives and updates its own vector." client:visible /> from its neighbours and updates its own vector. After four layers, a residue knows about everything within four hops of it. The output is one 128-number <HoverCard label="embedding" title="Embedding" body="A list of numbers describing a residue and its surroundings. Residues in similar situations get similar lists." client:visible /> per residue.
 
-That is the idea behind <Highlight text="self-supervised learning" type="underline" client:visible />.
+## Learning without labels
 
-Instead of asking a model to predict a measurement we don't have, we invent a task whose answers are already contained in the data.
+Stability labels are expensive. MegaScale is the largest set I know of, and it still covers only 298 small proteins (271,231 mutations). Structures are far more abundant: AlphaFold DB ([Varadi et al., 2022](https://doi.org/10.1093/nar/gkab1061)) and newer predictors such as [Chai-1](https://doi.org/10.1101/2024.10.10.615955) keep making more.
 
-For example, we can hide part of a protein and ask the model to predict what is missing.
+<Highlight text="Can a network learn something useful from structures alone, before it sees a single stability label?" client:visible />
 
-But that leaves an important question.
-
-What exactly should it predict?
+That is <Highlight text="self-supervised learning" type="underline" client:visible />: invent a task whose answer is already inside the data. Here, we hide the identity of 20% of the residues and ask the network to predict what was hidden. The open question is what exactly it should predict.
 
 ## A letter or a vector?
 
-There are several ways to play this game.
+There are two options.
 
-One is to hide the identity of an amino acid and ask the model to recover it. There are 20 standard amino acids, so this becomes a 20-way classification problem.
+**The letter.** Predict which of the 20 amino acids was hidden. This is a 20-way classification, the same idea as masked language modelling. It is also close to how ProteinMPNN ([Dauparas et al., 2022](https://doi.org/10.1126/science.add2187)) is trained: recover the amino acid at each position from the backbone.
 
-Another is more abstract.
+**The vector.** Don't predict a letter at all. Predict the embedding that a second network, the teacher, gives to the hidden residue. This is a Joint-Embedding Predictive Architecture, or JEPA ([LeCun, 2022](https://openreview.net/forum?id=BZ5a1r-kVsf); [Assran et al., 2023](https://arxiv.org/abs/2301.08243)), and Graph-JEPA ([Skenderi et al., 2023](https://arxiv.org/abs/2309.16014)) brings it to graphs.
 
-Instead of predicting an amino acid, the model predicts the embedding another network would assign to the hidden position.
+How the JEPA version works here:
 
-This is the idea behind a <Highlight text="Joint-Embedding Predictive Architecture" type="underline" client:visible />, or JEPA.
+- The student, the encoder plus a small predictor, sees the graph with residues hidden.
+- The teacher sees the full graph and produces the target embedding. Its weights are an <HoverCard label="EMA" title="Exponential moving average" body="The teacher is not trained directly. Its weights are a slow-moving average of the student's, so it changes gradually instead of chasing every step." client:visible /> of the student's, and it gets no gradient.
+- The loss is 1 − <HoverCard label="cosine similarity" title="Cosine similarity" body="Whether two vectors point in the same direction, ignoring their length. 1 means the same direction, 0 means unrelated." client:visible /> between the prediction and the target.
 
-The second network acts as a teacher. Its parameters are updated slowly from the student network, and the student learns to predict the teacher's representations of hidden regions.
+The appeal is that the network doesn't have to reconstruct every detail. It can predict something more abstract. The risk is <HoverCard label="collapse" title="Collapse" body="Every input ends up with almost the same embedding. The prediction task becomes trivial, but nothing useful is learned." client:visible />: if all targets look alike, predicting them is easy. The slow teacher and the missing gradient are there to prevent that, as in BYOL ([Grill et al., 2020](https://arxiv.org/abs/2006.07733)).
 
-The appealing idea is that the network doesn't have to reconstruct every detail of its input. It can learn to predict something more abstract.
+<HandTargets client:visible />
 
-That sounds rather nice.
+Solving a clever pretraining task is not the same as learning features for the problem you care about. I wanted to see whether that difference matters here.
 
-But there is a distinction between learning to solve a clever pretraining task and learning features that help with the problem we actually care about.
+### The four versions
 
-I wanted to find out whether that distinction mattered here.
+I trained four versions of the same graph neural network:
 
-So I trained four versions of the same graph neural network:
+- A, Nothing: no pretraining, learn only from stability labels.
+- B, Vector: predict the hidden residue's embedding, JEPA-style.
+- C, Letter: predict the hidden amino acid.
+- D, Both: letter loss plus 0.45 × vector loss.
 
-- A — Nothing: no pretraining, just learn from stability labels.
-- B — Vector: predict the hidden residue's embedding, JEPA-style.
-- C — Letter: predict the hidden amino acid.
-- D — Both: predict the amino acid and its embedding.
+The graph, encoder, masking rate, optimiser, pretraining data and seeds were identical. The pretrained encoders were then <HoverCard label="frozen" title="Frozen encoder" body="The pretrained weights are not updated afterwards. Only a small head on top learns to predict ΔΔG, so the score reflects what pretraining put into the encoder." client:visible /> for the stability task. The baseline has nothing to freeze, so it trains end to end.
 
-The graph architecture, masking rate, optimisation setup and pretraining data were kept fixed.
+<HandPipeline client:visible />
 
-The pretrained encoders were then frozen for the downstream stability task. The no-pretraining baseline learned its encoder directly from labelled data.
-
-If one pretraining objective produced substantially better features, this setup should give us a way to see it.
-
-<PredictionGame client:visible />
+If one objective produced better features, this setup should show it.
 
 ## The result I didn't want to ignore
 
-I started with 11,566 experimentally determined protein domains from SCOPe.
-
-For the downstream task, I used MegaScale stability measurements and evaluated on proteins held out from training.
+I pretrained on 11,566 experimentally determined domains from SCOPe ([Chandonia et al., 2022](https://doi.org/10.1093/nar/gkab1054)) and fine-tuned on MegaScale. The test proteins were held out and split by sequence identity, so none of them resembles anything in training.
 
 <DatasetNumbers client:visible />
 
@@ -198,107 +180,49 @@ Here is the result, averaged across three random seeds. Higher is better.
 
 <HandResults client:visible />
 
-The letter-prediction objective worked.
+<Highlight text="The letter objective worked." client:visible /> A frozen encoder pretrained without stability labels beat a model whose whole network was trained on the labelled task.
 
-A frozen encoder trained without stability labels outperformed a model whose entire encoder had been trained on the labelled task.
+The vector objective did worse than not pretraining at all. Not slightly worse. It lost <CountingNumber number={0.099} decimalPlaces={3} client:visible /> <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> against the baseline.
 
-The vector-prediction objective, meanwhile, did worse than not pretraining at all.
+This is <Highlight text="negative transfer" type="underline" client:visible />: pretraining made the downstream task harder instead of easier. Unfreezing the vector-pretrained encoder helped, but it still stayed below the baseline.
 
-Not slightly worse.
+For context, ThermoMPNN ([Dieckhaus et al., 2024](https://doi.org/10.1073/pnas.2314853121)) reports 0.725 on this test set by transferring a pretrained ProteinMPNN, and 0.642 when trained from scratch. Those are reference points, not targets: its pretraining is far heavier than mine. But it is built on a letter-trained model, so it was less surprising that the letter arm was the one that transferred.
 
-It lost <CountingNumber number={0.099} decimalPlaces={3} client:visible /> <HoverCard label="Spearman correlation" title="Spearman correlation" body="Does the model put the mutations in the same order as the lab measurements? 1 means the same order, 0 means no relationship, -1 means reversed." client:visible /> against the baseline.
-
-This is <Highlight text="negative transfer" type="underline" client:visible />: pretraining has given us a representation that makes the downstream task harder rather than easier.
-
-I also checked whether allowing the vector-pretrained encoder to update during fine-tuning would rescue it. That helped, but in the pilot it still performed below the no-pretraining baseline.
-
-Apparently, whatever the network had learned was not particularly helpful for predicting stability.
-
-And then the representation diagnostic made the story stranger.
+Then the standard diagnostic made the story stranger.
 
 ## The representation looked better. It wasn't.
 
-A common way to inspect learned representations without labels is to look at their <Highlight text="effective rank" type="underline" client:visible />.
+A common label-free check for a representation is its <HoverCard label="effective rank" title="Effective rank" body="A smooth count of how many directions of the embedding space are really used. If all vectors point the same way it is near 1; if all 128 directions are used equally it is 128. (Roy and Vetterli, 2007)" client:visible />. RankMe ([Garrido et al., 2023](https://arxiv.org/abs/2210.02885)) found that a higher rank tends to go with better downstream performance. A low rank is a warning sign for collapse.
 
-Very roughly, effective rank tells us how many dimensions of an embedding space are meaningfully being used.
+So I measured it. The JEPA model used about <CountingNumber number={74} client:visible /> effective dimensions out of 128. The letter model used about <CountingNumber number={62} client:visible />.
 
-If a network maps every input to essentially the same point, its representation has collapsed. Its effective rank will be very low.
-
-A larger effective rank suggests the representation is more spread out.
-
-So I measured it.
-
-The JEPA model used about <CountingNumber number={74} client:visible /> effective dimensions out of 128.
-
-The letter-prediction model used about <CountingNumber number={62} client:visible />.
-
-And yet the model with the higher effective rank was much worse at predicting protein stability.
-
-This was the opposite of what I'd have expected from the diagnostic alone.
+And yet the model with the higher rank was much worse at predicting stability. The diagnostic ranked the arms in exactly the reverse order of how they transferred.
 
 <HandRank client:visible />
 
-To be clear, a high effective rank doesn't guarantee a good representation. It tells us something about its geometry, not whether it contains the information a downstream task needs.
-
-But that's precisely the interesting part.
-
-<Highlight text="A representation can occupy more dimensions without being more useful." client:visible />
-
-The model was learning something. The problem was that my preferred diagnostic couldn't tell me whether it was the right something.
+A high rank doesn't guarantee a good representation. It describes geometry, not whether the information a task needs is in there. <Highlight text="A representation can use more dimensions without being more useful." client:visible /> The model was learning something, but my diagnostic couldn't tell me whether it was the right something.
 
 ## The mystery of the increasing loss
 
-Remember the loss that kept rising during the summer project?
+Remember the loss that kept rising in our Petnica project? The rank measurements explain it.
 
-The effective-rank measurements helped explain it.
+Early in JEPA training the network nearly collapsed, and many residues were mapped to almost the same embedding. That makes the task easy: if every target looks alike, you can give almost the same answer everywhere. At epoch 1 the effective rank fell to 12.8 and the loss reached 0.007.
 
-Early in JEPA training, the network nearly collapsed. Many residues were mapped to almost the same embedding.
-
-That makes the prediction task wonderfully easy.
-
-If every target looks similar, you don't need a clever predictor. You can produce almost the same answer everywhere.
-
-At epoch 1, the effective rank fell to 12.8 and the loss reached 0.007.
-
-Then the representation started spreading out again.
-
-The slowly updated teacher was changing, the targets became less trivial, and the prediction task became harder.
-
-So the loss increased. Here is the log from the vector-only run:
+Then the representation spread out again. The slowly updated teacher kept changing, the targets became less trivial, and the task got harder. So the loss rose. Here is the log from the vector-only run:
 
 <TerminalReplay client:visible />
 
 <HandLoss client:visible />
 
-This was the part I found particularly satisfying: what looked like two separate problems in our earlier experiment were connected.
-
-The rising loss and the collapse weren't unrelated symptoms.
-
-The loss was rising as the model <Highlight text="escaped collapse" client:visible />.
-
-And yet escaping collapse didn't mean it had learned features useful for stability.
-
-That distinction is worth remembering. When the target itself is moving, a training-loss curve doesn't necessarily tell the story we expect it to.
+Two problems that looked separate were one. <Highlight text="The loss was rising because the model was escaping collapse." client:visible /> And escaping collapse did not mean it had learned features useful for stability. When the target itself is moving, a training-loss curve doesn't tell the story you expect.
 
 ## What if we just give it more data?
 
-Perhaps JEPA simply needed more proteins.
+Perhaps JEPA simply needed more proteins. I repeated the pretrained runs on <CountingNumber number={26057} client:visible /> predicted structures from AlphaFold DB, more than twice the size of SCOPe. The Protein Workshop benchmark ([Jamasb et al., 2024](https://arxiv.org/abs/2406.13826)) studies structure pretraining at a larger scale, and AlphaFold structures are a natural corpus for it.
 
-To investigate that, I repeated the pretrained experiments using <CountingNumber number={26057} client:visible /> predicted structures from AlphaFold, more than twice the size of the original corpus.
+The vector model improved, from 0.506 to 0.543, but stayed behind the baseline. The letter model was almost unchanged: 0.640 became 0.639. So was the combined model.
 
-The vector model improved, from 0.506 to 0.543.
-
-But it was still behind the no-pretraining baseline.
-
-The letter model? Almost unchanged: 0.640 became 0.639.
-
-The combined model? Also effectively unchanged.
-
-Something even more interesting happened with the letter model. Its masked amino-acid prediction accuracy rose from <CountingNumber number={26.7} decimalPlaces={1} suffix="%" client:visible /> to <CountingNumber number={35.3} decimalPlaces={1} suffix="%" delay={400} client:visible />.
-
-It had become substantially better at the task I had trained it to solve.
-
-But it had not become better at predicting stability.
+The letter model did get much better at its own task. Its masked amino-acid accuracy rose from <CountingNumber number={26.7} decimalPlaces={1} suffix="%" client:visible /> to <CountingNumber number={35.3} decimalPlaces={1} suffix="%" delay={400} client:visible />. It was better at what I trained it for, and no better at predicting stability.
 
 <HandMore client:visible />
 
@@ -307,43 +231,47 @@ So now I had two observations:
 1. A representation with higher effective rank could perform worse downstream.
 2. A model that got better at its pretraining task could show no downstream improvement.
 
-Neither diagnostic was a reliable guide to what I ultimately cared about in this experiment.
+Neither of the two things you would normally check without labels, embedding rank and pretext-task accuracy, predicted what I cared about.
 
-There is an important caveat: the AlphaFold corpus differs from SCOPe in more than size, and the larger run also involved more optimiser steps. This isn't a clean scaling experiment.
-
-What it does show is that the ordering survived a second, larger and different corpus.
+One caveat: the AlphaFold corpus differs from SCOPe in more than size, and the larger run also took more optimiser steps. This isn't a clean scaling experiment. What it shows is that the ordering survived a second, larger and different corpus.
 
 ## What I'm taking away
 
-I started this project asking which self-supervised objective was better for protein stability.
+I started by asking which self-supervised objective is better for protein stability. For this encoder, dataset and setup, masked amino-acid prediction was clearly more useful than predicting JEPA embeddings. Combining the two matched the letter alone. The vector term prevented the early collapse, but gave no real downstream gain.
 
-For this particular encoder, dataset and training setup, masked amino-acid prediction was clearly more useful than predicting JEPA embeddings.
+I don't think this means JEPA is a bad idea for proteins. This is <Highlight text="one experiment" client:visible />: one encoder, one downstream task, two corpora and three seeds. There is a lot I haven't tested: different predictors, masking strategies, longer pretraining, other architectures and other tasks. Other people will probably get different results with other designs, and I'd like to see them. I'll keep testing more of these myself.
 
-Combining the two objectives performed similarly to letter prediction alone. The additional vector objective also prevented the early collapse seen in the vector-only model, but didn't give a meaningful downstream improvement.
+What it does make me question is how casually we read signs of successful representation learning:
 
-I don't think this means JEPA is a bad idea for proteins.
+- A lower loss is not always better learning.
+- A more spread-out embedding space is not necessarily a more useful one.
+- Solving a pretraining task more accurately does not mean we've learned more about the downstream problem.
 
-There are too many things I haven't tested: different predictors, masking strategies, longer pretraining, architectures, and downstream tasks.
-
-What it does make me question is how casually we sometimes interpret signs of successful representation learning.
-
-A lower loss is not always better learning.
-
-A more spread-out embedding space is not necessarily a more useful one.
-
-And solving a pretraining task more accurately does not automatically mean we've learned more about the downstream problem.
-
-I still want to understand what the letter-prediction model learned that the vector-prediction model didn't.
-
-Maybe it captures local geometric constraints more effectively. Maybe the JEPA objective needs a different design to encourage stability-relevant features.
-
-I don't know yet.
-
-But I like that the experiment gave me a sharper question than the one I started with.
-
-And perhaps that's a perfectly good result, too.
+I still want to know what the letter model learned that the vector model didn't. Maybe it captures local geometry better. Maybe the JEPA objective needs a different design to encourage stability-relevant features. I don't know yet, but the experiment gave me a sharper question than the one I started with, and that's a perfectly good result too.
 
 Code and logs: [graph-jepa-protein-stability](https://github.com/FidanKarimli/graph-jepa-protein-stability). The project began at the Petnica Summer Institute with Pau Martínez.
+
+## References
+
+<div class="credits">
+
+- LeCun, Y. (2022). [A Path Towards Autonomous Machine Intelligence](https://openreview.net/forum?id=BZ5a1r-kVsf).
+- Assran, M. et al. (2023). [Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture (I-JEPA)](https://arxiv.org/abs/2301.08243).
+- Skenderi, G. et al. (2023). [Graph-level Representation Learning with Joint-Embedding Predictive Architectures (Graph-JEPA)](https://arxiv.org/abs/2309.16014).
+- Grill, J.-B. et al. (2020). [Bootstrap Your Own Latent (BYOL)](https://arxiv.org/abs/2006.07733).
+- Garrido, Q. et al. (2023). [RankMe: Assessing the Downstream Performance of Pretrained Self-Supervised Representations by Their Rank](https://arxiv.org/abs/2210.02885).
+- Roy, O. and Vetterli, M. (2007). The effective rank: a measure of effective dimensionality. EUSIPCO.
+- Xu, K. et al. (2019). [How Powerful are Graph Neural Networks? (GIN)](https://arxiv.org/abs/1810.00826).
+- Hu, W. et al. (2020). [Strategies for Pre-training Graph Neural Networks](https://arxiv.org/abs/1905.12265).
+- Tsuboyama, K. et al. (2023). [Mega-scale experimental analysis of protein folding stability in biology and design](https://doi.org/10.1038/s41586-023-06328-6). Nature.
+- Dieckhaus, H. et al. (2024). [Transfer learning to leverage larger datasets for improved prediction of protein stability changes (ThermoMPNN)](https://doi.org/10.1073/pnas.2314853121). PNAS.
+- Dauparas, J. et al. (2022). [Robust deep learning-based protein sequence design using ProteinMPNN](https://doi.org/10.1126/science.add2187). Science.
+- Jamasb, A. et al. (2024). [Evaluating Representation Learning on the Protein Structure Universe (Protein Workshop)](https://arxiv.org/abs/2406.13826). ICLR.
+- Chandonia, J.-M. et al. (2022). [SCOPe: classification of large macromolecular structures in the Structural Classification of Proteins—extended database](https://doi.org/10.1093/nar/gkab1054). Nucleic Acids Research.
+- Varadi, M. et al. (2022). [AlphaFold Protein Structure Database](https://doi.org/10.1093/nar/gkab1061). Nucleic Acids Research.
+- Chai Discovery (2024). [Chai-1: Decoding the molecular interactions of life](https://doi.org/10.1101/2024.10.10.615955). bioRxiv.
+
+</div>
 
 ## Credits
 
