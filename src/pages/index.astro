@@ -9,9 +9,7 @@ import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
 import PostTile from "@/components/PostTile.astro";
 import PhotoPileSort from "@/components/PhotoPileSort.tsx";
-import DocumentsFolder from "@/components/DocumentsFolder.tsx";
-import AboutLanyard from "@/components/AboutLanyard.tsx";
-import { getAssetPath } from "@/utils/withBase";
+import Highlight from "@/components/Highlight.tsx";
 import GlyphBackground from "@/components/GlyphBackground.tsx";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -32,13 +30,6 @@ const galleryImages = [
   { src: "/images/gallery/teknofest.jpg", alt: "Holding the Baku Higher Oil School flag at Teknofest" },
   { src: "/images/gallery/certificates.jpg", alt: "Three of us holding certificates at Baku Higher Oil School" },
   { src: "/images/gallery/maire-winners.jpg", alt: "Block Power team with the 3,000 AZN winner cheque for the energy transition challenge" },
-];
-// The folder of documents and profile links.
-const documents = [
-  { title: "CV", description: "Download as PDF", href: getAssetPath("cv.pdf"), icon: "cv" as const },
-  { title: "LinkedIn", description: "Work and career", href: "https://www.linkedin.com/in/fidan--karimli/", icon: "linkedin" as const },
-  { title: "GitHub", description: "Code and projects", href: "https://github.com/FidanKarimli", icon: "github" as const },
-  { title: "Email", description: "karimlifidan@outlook.com", href: "mailto:karimlifidan@outlook.com", icon: "mail" as const },
 ];
 const homePath = getRelativeLocaleUrl(locale, "");
 ---
@@ -76,40 +67,57 @@ const homePath = getRelativeLocaleUrl(locale, "");
           </a>
 
           <p>
-            AI engineer from Baku, Azerbaijan, building language models for
-            Azerbaijani and researching graph learning. This blog is where I
-            explain what I learn, with small interactive pictures.
-          </p>
-          <p class="mt-2">
-            At the National AI Center of Azerbaijan, I adapt language models to
-            Azerbaijani law. I also research recommender systems with{" "}
+            I'm an AI engineer at the National AI Center of Azerbaijan, where I
+            adapt large language models to Azerbaijani legal text, from
+            domain-adaptive pretraining on 56,000+ laws to OCR for court
+            evidence documents. I also do research on recommender systems with{" "}
             <a
               class="hover:text-accent underline decoration-dashed underline-offset-4"
               href="https://web.itu.edu.tr/yyaslan/">Prof. Yusuf Yaslan</a
-            >{" "}at Istanbul Technical University. More in my{" "}
-            <LinkButton
-              class="hover:text-accent underline decoration-dashed underline-offset-4"
-              href="/cv.pdf"
-            >
-              CV
-            </LinkButton>
-            .
+            >{" "}at Istanbul Technical University, building graph neural network
+            methods for cross-domain recommendation.
           </p>
           <ProfileLinks />
         </div>
-        <div class="mt-2 w-full max-w-xs shrink-0 md:-mt-2 md:w-60">
-          <AboutLanyard client:only="react" photo="/images/me-card.jpg" />
-        </div>
+        <img
+          src="/images/me.jpg"
+          alt="Me at the Future Energy Leaders Summer School in Beijing"
+          class="border-border mt-4 aspect-[4/3] w-full max-w-xs shrink-0 rounded-lg border object-cover shadow-sm md:mt-8 md:aspect-[4/5] md:w-64 md:object-[71%_50%]"
+        />
       </div>
-      <p class="mt-8">
-        I'm currently interested in{" "}
-        <strong>information retrieval</strong>,{" "}
-        <strong>graph neural networks</strong>,{" "}
-        <strong>recommender systems</strong>,{" "}
-        <strong>low-resource NLP</strong>, <strong>LLMs</strong> and{" "}
-        <strong>scientific ML</strong>.
+      <p class="mt-8">I'm currently interested in:</p>
+      <ul class="marker:text-accent mt-2 list-disc space-y-1.5 pl-5 sm:columns-2">
+        <li><Highlight client:visible text="information retrieval" /></li>
+        <li><Highlight client:visible text="graph neural networks" /></li>
+        <li><Highlight client:visible text="recommender systems" /></li>
+        <li><Highlight client:visible text="low-resource NLP" /></li>
+        <li><Highlight client:visible text="LLMs" /></li>
+        <li><Highlight client:visible text="scientific ML" /></li>
+      </ul>
+      <p class="mt-4">
+        I write about them on the{" "}
+        <LinkButton
+          class="hover:text-accent underline decoration-dashed underline-offset-4"
+          href={getRelativeLocaleUrl(locale, "posts")}
+        >
+          blog
+        </LinkButton>, with small interactive pictures.
+      </p>
+      <p class="mt-6">
+        I graduated from Baku Higher Oil School with a bachelor's degree in
+        Process Automation Engineering, as a Presidential Scholar (top 0.06% in
+        the national university entrance exam). My thesis, ClimNODE, applied
+        Neural ODEs to climate dynamics under noisy observations. Before moving
+        into AI, I worked as a data analyst at AGA Group and mentored students
+        in data science.
       </p>
       <p class="mt-2">
+        Outside work, I led the Data Science Club at Baku Higher Oil School and
+        serve as the Azerbaijan ambassador for Women in Data Science. I have
+        also taken part in the Petnica Summer Institute of Machine Learning in
+        Serbia and the Future Energy Leaders Summer School in Beijing.
+      </p>
+      <p class="mt-5">
         I'm always happy to collaborate on these topics. Feel free to write to
         me at{" "}
         <a
@@ -117,15 +125,6 @@ const homePath = getRelativeLocaleUrl(locale, "");
           href="mailto:karimlifidan@outlook.com">karimlifidan@outlook.com</a
         >.
       </p>
-    </section>
-
-    <section id="documents" class="border-border border-b py-10">
-      <h2 class="text-2xl font-semibold tracking-wide">My documents</h2>
-      <p class="mt-2 text-sm opacity-70">Click the folder to open it.</p>
-      {/* Top space: the papers rise above the folder when it opens. */}
-      <div class="mt-28 min-h-52">
-        <DocumentsFolder client:only="react" items={documents} />
-      </div>
     </section>
 
     {/* Draft, hidden for now: "Some moments" photo pile. Remove the comment markers to bring it back.

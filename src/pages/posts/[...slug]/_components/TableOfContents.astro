@@ -5,8 +5,9 @@ type Props = {
   headings: MarkdownHeading[];
 };
 
-// Only h2/h3 make it into the contents; h1 is the post title.
-const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
+// Only the h2 section titles make it into the contents, to keep the list short.
+// h1 is the post title and h3 are the details inside a section.
+const items = Astro.props.headings.filter(h => h.depth === 2);
 ---
 
 {
