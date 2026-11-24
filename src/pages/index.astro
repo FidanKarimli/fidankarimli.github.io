@@ -7,9 +7,11 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import ProfileLinks from "@/components/ProfileLinks.astro";
-import PhotoCollage from "@/components/PhotoCollage.astro";
 import PostTile from "@/components/PostTile.astro";
 import PhotoPileSort from "@/components/PhotoPileSort.tsx";
+import DocumentsFolder from "@/components/DocumentsFolder.tsx";
+import AboutLanyard from "@/components/AboutLanyard.tsx";
+import { getAssetPath } from "@/utils/withBase";
 import GlyphBackground from "@/components/GlyphBackground.tsx";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -30,6 +32,13 @@ const galleryImages = [
   { src: "/images/gallery/teknofest.jpg", alt: "Holding the Baku Higher Oil School flag at Teknofest" },
   { src: "/images/gallery/certificates.jpg", alt: "Three of us holding certificates at Baku Higher Oil School" },
   { src: "/images/gallery/maire-winners.jpg", alt: "Block Power team with the 3,000 AZN winner cheque for the energy transition challenge" },
+];
+// The folder of documents and profile links.
+const documents = [
+  { title: "CV", description: "Download as PDF", href: getAssetPath("cv.pdf"), icon: "cv" as const },
+  { title: "LinkedIn", description: "Work and career", href: "https://www.linkedin.com/in/fidan--karimli/", icon: "linkedin" as const },
+  { title: "GitHub", description: "Code and projects", href: "https://github.com/FidanKarimli", icon: "github" as const },
+  { title: "Email", description: "karimlifidan@outlook.com", href: "mailto:karimlifidan@outlook.com", icon: "mail" as const },
 ];
 const homePath = getRelativeLocaleUrl(locale, "");
 ---
@@ -67,27 +76,17 @@ const homePath = getRelativeLocaleUrl(locale, "");
           </a>
 
           <p>
-            I'm an AI engineer from Baku, Azerbaijan. I work on language models
-            for Azerbaijani and do research on graph learning and protein
-            models. On this blog I explain what I learn, with small interactive
-            pictures.
+            AI engineer from Baku, Azerbaijan, building language models for
+            Azerbaijani and researching graph learning. This blog is where I
+            explain what I learn, with small interactive pictures.
           </p>
           <p class="mt-2">
-            Right now I'm a Junior AI Engineer at the National AI Center of
-            Azerbaijan, where I adapt language models to Azerbaijani law. I also
-            do research on recommender systems with{" "}
+            At the National AI Center of Azerbaijan, I adapt language models to
+            Azerbaijani law. I also research recommender systems with{" "}
             <a
               class="hover:text-accent underline decoration-dashed underline-offset-4"
               href="https://web.itu.edu.tr/yyaslan/">Prof. Yusuf Yaslan</a
-            >{" "}at Istanbul Technical University. I studied Process Automation
-            Engineering at Baku Higher Oil School. More on the{" "}
-            <LinkButton
-              class="hover:text-accent underline decoration-dashed underline-offset-4"
-              href={getRelativeLocaleUrl(locale, "about")}
-            >
-              about page
-            </LinkButton>{" "}
-            and in my{" "}
+            >{" "}at Istanbul Technical University. More in my{" "}
             <LinkButton
               class="hover:text-accent underline decoration-dashed underline-offset-4"
               href="/cv.pdf"
@@ -98,7 +97,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
           </p>
           <ProfileLinks />
         </div>
-        <PhotoCollage class="mt-4 md:mt-16" />
+        <div class="mt-2 w-full max-w-xs shrink-0 md:-mt-2 md:w-60">
+          <AboutLanyard client:only="react" photo="/images/me-card.jpg" />
+        </div>
       </div>
       <p class="mt-8">
         I'm currently interested in{" "}
@@ -118,6 +119,16 @@ const homePath = getRelativeLocaleUrl(locale, "");
       </p>
     </section>
 
+    <section id="documents" class="border-border border-b py-10">
+      <h2 class="text-2xl font-semibold tracking-wide">My documents</h2>
+      <p class="mt-2 text-sm opacity-70">Click the folder to open it.</p>
+      {/* Top space: the papers rise above the folder when it opens. */}
+      <div class="mt-28 min-h-52">
+        <DocumentsFolder client:only="react" items={documents} />
+      </div>
+    </section>
+
+    {/* Draft, hidden for now: "Some moments" photo pile. Remove the comment markers to bring it back.
     <section id="moments" class="border-border border-b py-10">
       <h2 class="text-2xl font-semibold tracking-wide">Some moments</h2>
       <p class="mt-2 text-sm opacity-70">Scroll inside the pile to toss the photos down.</p>
@@ -130,6 +141,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
         className="mx-auto mt-6 max-w-md rounded-lg border border-border"
       />
     </section>
+    */}
 
     {
       recentPosts.length > 0 && (
@@ -137,6 +149,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
           <h2 class="text-2xl font-semibold tracking-wide">
             {t.home.recentPosts}
           </h2>
+
           <ul class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {recentPosts.slice(0, postsConfig.perIndex).map(data => (
               <PostTile {...data} />
